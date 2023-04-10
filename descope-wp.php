@@ -105,9 +105,9 @@ function descope_wc_shortcode($atts)
 
     $var_dc = $projectID;
     $html = '<descope-wc id=' . $id . ' project-id=' . $projectID . ' flow-id=' . $flowId . ' redirect_url=' . $redirectUrl . '></descope-wc>';
-    $html .= "<script>"
-    $html .= 'const sdk = Descope({ projectId: ' . $projectID . ', persistTokens: true, autoRefresh: true });'
-    $html .= "</script>"
+    $html .= "<script>";
+    $html .= 'const sdk = Descope({ projectId: ' . $projectID . ', persistTokens: true, autoRefresh: true });';
+    $html .= "</script>";
     // Return the HTML
     return $html;
 

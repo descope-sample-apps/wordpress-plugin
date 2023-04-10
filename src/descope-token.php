@@ -47,6 +47,7 @@ $isVerified = $jwsVerifier->verifyWithKeySet($jws, $jwk_set, 0);
 
 // If Signature is not valid, destroy session.
 if (!$isVerified) {
+  echo 'Invalid Signature';
   session_destroy();
 	// return $jws->getPayload();
 } else {
@@ -57,5 +58,7 @@ if (!$isVerified) {
   $_SESSION["AUTH_ID"] = $user_id;
   $_SESSION["AUTH_NAME"] = $user_name;
   $_SESSION["SESSION_TOKEN"] = $session_token;
+  
+  echo 'Session Token: ' . $_SESSION["SESSION_TOKEN"];
 }
 ?>
