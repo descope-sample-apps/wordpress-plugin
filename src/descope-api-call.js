@@ -6,6 +6,7 @@ const onSuccess = (e) => {
   const refreshToken = e.detail.refreshJwt;
   // console.log("sessionToken", sessionToken);
   // console.log("refreshToken", refreshToken);
+  sdk.refresh();
 
   createToken(
     e?.detail?.user,
