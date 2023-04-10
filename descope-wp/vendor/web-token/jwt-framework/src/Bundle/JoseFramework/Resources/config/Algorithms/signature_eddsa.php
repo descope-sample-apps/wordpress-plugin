@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Jose\Component\Signature\Algorithm\EdDSA;
-
 /*
  * The MIT License (MIT)
  *
@@ -13,17 +11,17 @@ use Jose\Component\Signature\Algorithm\EdDSA;
  * of the MIT license.  See the LICENSE file for details.
  */
 
+use Jose\Component\Signature\Algorithm;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 return function (ContainerConfigurator $container): void {
-    $container = $container->services()
-        ->defaults()
+    $container = $container->services()->defaults()
         ->private()
         ->autoconfigure()
-        ->autowire();
+        ->autowire()
+    ;
 
-    $container->set(EdDSA::class)
-        ->tag('jose.algorithm', [
-            'alias' => 'EdDSA',
-        ]);
+    $container->set(Algorithm\EdDSA::class)
+        ->tag('jose.algorithm', ['alias' => 'EdDSA'])
+    ;
 };

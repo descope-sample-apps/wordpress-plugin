@@ -14,8 +14,8 @@ namespace Symfony\Component\DependencyInjection\Compiler;
 use Symfony\Component\DependencyInjection\Argument\AbstractArgument;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
+use Symfony\Component\DependencyInjection\LazyProxy\ProxyHelper;
 use Symfony\Component\DependencyInjection\Reference;
-use Symfony\Component\VarExporter\ProxyHelper;
 
 /**
  * Resolves named arguments to their corresponding numeric index.
@@ -24,7 +24,10 @@ use Symfony\Component\VarExporter\ProxyHelper;
  */
 class ResolveNamedArgumentsPass extends AbstractRecursivePass
 {
-    protected function processValue(mixed $value, bool $isRoot = false): mixed
+    /**
+     * {@inheritdoc}
+     */
+    protected function processValue($value, bool $isRoot = false)
     {
         if ($value instanceof AbstractArgument && $value->getText().'.' === $value->getTextWithContext()) {
             $value->setContext(sprintf('A value found in service "%s"', $this->currentId));
@@ -91,7 +94,7 @@ class ResolveNamedArgumentsPass extends AbstractRecursivePass
 
                 $typeFound = false;
                 foreach ($parameters as $j => $p) {
-                    if (!\array_key_exists($j, $resolvedArguments) && ProxyHelper::exportType($p, true) === $key) {
+                    if (!\array_key_exists($j, $resolvedArguments) && ProxyHelper::getTypeHint($r, $p, true) === $key) {
                         $resolvedKeys[$j] = $p->name;
                         $resolvedArguments[$j] = $argument;
                         $typeFound = true;

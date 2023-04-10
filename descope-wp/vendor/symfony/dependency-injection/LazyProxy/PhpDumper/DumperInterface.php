@@ -23,20 +23,21 @@ interface DumperInterface
     /**
      * Inspects whether the given definitions should produce proxy instantiation logic in the dumped container.
      *
-     * @param bool|null   &$asGhostObject Set to true after the call if the proxy is a ghost object
-     * @param string|null $id
+     * @return bool
      */
-    public function isProxyCandidate(Definition $definition/* , bool &$asGhostObject = null, string $id = null */): bool;
+    public function isProxyCandidate(Definition $definition);
 
     /**
      * Generates the code to be used to instantiate a proxy in the dumped factory code.
+     *
+     * @return string
      */
-    public function getProxyFactoryCode(Definition $definition, string $id, string $factoryCode): string;
+    public function getProxyFactoryCode(Definition $definition, string $id, string $factoryCode);
 
     /**
      * Generates the code for the lazy proxy.
      *
-     * @param string|null $id
+     * @return string
      */
-    public function getProxyCode(Definition $definition/* , string $id = null */): string;
+    public function getProxyCode(Definition $definition);
 }

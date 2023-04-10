@@ -22,7 +22,7 @@ use Symfony\Component\Config\Resource\ResourceInterface;
  */
 class ContainerParametersResource implements ResourceInterface
 {
-    private array $parameters;
+    private $parameters;
 
     /**
      * @param array $parameters The container parameters to track

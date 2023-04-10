@@ -43,6 +43,9 @@ abstract class Input implements InputInterface, StreamableInputInterface
         }
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function bind(InputDefinition $definition)
     {
         $this->arguments = [];
@@ -57,6 +60,9 @@ abstract class Input implements InputInterface, StreamableInputInterface
      */
     abstract protected function parse();
 
+    /**
+     * {@inheritdoc}
+     */
     public function validate()
     {
         $definition = $this->definition;
@@ -71,22 +77,34 @@ abstract class Input implements InputInterface, StreamableInputInterface
         }
     }
 
-    public function isInteractive(): bool
+    /**
+     * {@inheritdoc}
+     */
+    public function isInteractive()
     {
         return $this->interactive;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function setInteractive(bool $interactive)
     {
         $this->interactive = $interactive;
     }
 
-    public function getArguments(): array
+    /**
+     * {@inheritdoc}
+     */
+    public function getArguments()
     {
         return array_merge($this->definition->getArgumentDefaults(), $this->arguments);
     }
 
-    public function getArgument(string $name): mixed
+    /**
+     * {@inheritdoc}
+     */
+    public function getArgument(string $name)
     {
         if (!$this->definition->hasArgument($name)) {
             throw new InvalidArgumentException(sprintf('The "%s" argument does not exist.', $name));
@@ -95,7 +113,10 @@ abstract class Input implements InputInterface, StreamableInputInterface
         return $this->arguments[$name] ?? $this->definition->getArgument($name)->getDefault();
     }
 
-    public function setArgument(string $name, mixed $value)
+    /**
+     * {@inheritdoc}
+     */
+    public function setArgument(string $name, $value)
     {
         if (!$this->definition->hasArgument($name)) {
             throw new InvalidArgumentException(sprintf('The "%s" argument does not exist.', $name));
@@ -104,17 +125,26 @@ abstract class Input implements InputInterface, StreamableInputInterface
         $this->arguments[$name] = $value;
     }
 
-    public function hasArgument(string $name): bool
+    /**
+     * {@inheritdoc}
+     */
+    public function hasArgument(string $name)
     {
         return $this->definition->hasArgument($name);
     }
 
-    public function getOptions(): array
+    /**
+     * {@inheritdoc}
+     */
+    public function getOptions()
     {
         return array_merge($this->definition->getOptionDefaults(), $this->options);
     }
 
-    public function getOption(string $name): mixed
+    /**
+     * {@inheritdoc}
+     */
+    public function getOption(string $name)
     {
         if ($this->definition->hasNegation($name)) {
             if (null === $value = $this->getOption($this->definition->negationToName($name))) {
@@ -131,7 +161,10 @@ abstract class Input implements InputInterface, StreamableInputInterface
         return \array_key_exists($name, $this->options) ? $this->options[$name] : $this->definition->getOption($name)->getDefault();
     }
 
-    public function setOption(string $name, mixed $value)
+    /**
+     * {@inheritdoc}
+     */
+    public function setOption(string $name, $value)
     {
         if ($this->definition->hasNegation($name)) {
             $this->options[$this->definition->negationToName($name)] = !$value;
@@ -144,24 +177,35 @@ abstract class Input implements InputInterface, StreamableInputInterface
         $this->options[$name] = $value;
     }
 
-    public function hasOption(string $name): bool
+    /**
+     * {@inheritdoc}
+     */
+    public function hasOption(string $name)
     {
         return $this->definition->hasOption($name) || $this->definition->hasNegation($name);
     }
 
     /**
      * Escapes a token through escapeshellarg if it contains unsafe chars.
+     *
+     * @return string
      */
-    public function escapeToken(string $token): string
+    public function escapeToken(string $token)
     {
         return preg_match('{^[\w-]+$}', $token) ? $token : escapeshellarg($token);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function setStream($stream)
     {
         $this->stream = $stream;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getStream()
     {
         return $this->stream;

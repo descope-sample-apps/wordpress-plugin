@@ -34,9 +34,9 @@ class RequestDataCollector extends DataCollector implements EventSubscriberInter
     /**
      * @var \SplObjectStorage<Request, callable>
      */
-    private \SplObjectStorage $controllers;
-    private array $sessionUsages = [];
-    private ?RequestStack $requestStack;
+    private $controllers;
+    private $sessionUsages = [];
+    private $requestStack;
 
     public function __construct(RequestStack $requestStack = null)
     {
@@ -44,6 +44,9 @@ class RequestDataCollector extends DataCollector implements EventSubscriberInter
         $this->requestStack = $requestStack;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function collect(Request $request, Response $response, \Throwable $exception = null)
     {
         // attributes are serialized and as they can be anything, they need to be converted to strings.
@@ -107,7 +110,7 @@ class RequestDataCollector extends DataCollector implements EventSubscriberInter
             'session_metadata' => $sessionMetadata,
             'session_attributes' => $sessionAttributes,
             'session_usages' => array_values($this->sessionUsages),
-            'stateless_check' => $this->requestStack?->getMainRequest()?->attributes->get('_stateless') ?? false,
+            'stateless_check' => $this->requestStack && ($mainRequest = $this->requestStack->getMainRequest()) && $mainRequest->attributes->get('_stateless', false),
             'flashes' => $flashes,
             'path_info' => $request->getPathInfo(),
             'controller' => 'n/a',
@@ -343,7 +346,7 @@ class RequestDataCollector extends DataCollector implements EventSubscriberInter
      * @return array|string|Data The controller as a string or array of data
      *                           with keys 'class', 'method', 'file' and 'line'
      */
-    public function getController(): array|string|Data
+    public function getController()
     {
         return $this->data['controller'];
     }
@@ -354,7 +357,7 @@ class RequestDataCollector extends DataCollector implements EventSubscriberInter
      * @return array|Data|false A legacy array of data from the previous redirection response
      *                          or false otherwise
      */
-    public function getRedirect(): array|Data|false
+    public function getRedirect()
     {
         return $this->data['redirect'] ?? false;
     }
@@ -388,6 +391,9 @@ class RequestDataCollector extends DataCollector implements EventSubscriberInter
         ];
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getName(): string
     {
         return 'request';
@@ -425,9 +431,11 @@ class RequestDataCollector extends DataCollector implements EventSubscriberInter
     }
 
     /**
+     * @param string|object|array|null $controller The controller to parse
+     *
      * @return array|string An array of controller data or a simple string
      */
-    private function parseController(array|object|string|null $controller): array|string
+    private function parseController($controller)
     {
         if (\is_string($controller) && str_contains($controller, '::')) {
             $controller = explode('::', $controller);
@@ -443,7 +451,7 @@ class RequestDataCollector extends DataCollector implements EventSubscriberInter
                     'file' => $r->getFileName(),
                     'line' => $r->getStartLine(),
                 ];
-            } catch (\ReflectionException) {
+            } catch (\ReflectionException $e) {
                 if (\is_callable($controller)) {
                     // using __call or  __callStatic
                     return [

@@ -16,10 +16,10 @@ namespace Symfony\Component\DependencyInjection\Exception;
  */
 class AutowiringFailedException extends RuntimeException
 {
-    private string $serviceId;
-    private ?\Closure $messageCallback = null;
+    private $serviceId;
+    private $messageCallback;
 
-    public function __construct(string $serviceId, string|\Closure $message = '', int $code = 0, \Throwable $previous = null)
+    public function __construct(string $serviceId, $message = '', int $code = 0, \Throwable $previous = null)
     {
         $this->serviceId = $serviceId;
 
@@ -39,8 +39,8 @@ class AutowiringFailedException extends RuntimeException
         parent::__construct('', $code, $previous);
 
         $this->message = new class($this->message, $this->messageCallback) {
-            private string|self $message;
-            private ?\Closure $messageCallback;
+            private $message;
+            private $messageCallback;
 
             public function __construct(&$message, &$messageCallback)
             {

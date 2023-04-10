@@ -16,9 +16,7 @@ use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Definition;
-use Symfony\Component\DependencyInjection\Exception\LogicException;
 use Symfony\Component\DependencyInjection\Reference;
-use Symfony\Component\ExpressionLanguage\Expression;
 
 /**
  * Run this pass before passes that need to know more about the relation of
@@ -32,15 +30,15 @@ use Symfony\Component\ExpressionLanguage\Expression;
  */
 class AnalyzeServiceReferencesPass extends AbstractRecursivePass
 {
-    private ServiceReferenceGraph $graph;
-    private ?Definition $currentDefinition = null;
-    private bool $onlyConstructorArguments;
-    private bool $hasProxyDumper;
-    private bool $lazy;
-    private bool $byConstructor;
-    private bool $byFactory;
-    private array $definitions;
-    private array $aliases;
+    private $graph;
+    private $currentDefinition;
+    private $onlyConstructorArguments;
+    private $hasProxyDumper;
+    private $lazy;
+    private $byConstructor;
+    private $byFactory;
+    private $definitions;
+    private $aliases;
 
     /**
      * @param bool $onlyConstructorArguments Sets this Service Reference pass to ignore method calls
@@ -78,7 +76,7 @@ class AnalyzeServiceReferencesPass extends AbstractRecursivePass
         }
     }
 
-    protected function processValue(mixed $value, bool $isRoot = false): mixed
+    protected function processValue($value, bool $isRoot = false)
     {
         $lazy = $this->lazy;
         $inExpression = $this->inExpression();
@@ -100,7 +98,7 @@ class AnalyzeServiceReferencesPass extends AbstractRecursivePass
                 $targetId,
                 $targetDefinition,
                 $value,
-                $this->lazy || ($this->hasProxyDumper && $targetDefinition?->isLazy()),
+                $this->lazy || ($this->hasProxyDumper && $targetDefinition && $targetDefinition->isLazy()),
                 ContainerInterface::IGNORE_ON_UNINITIALIZED_REFERENCE === $value->getInvalidBehavior(),
                 $this->byConstructor
             );
@@ -112,7 +110,7 @@ class AnalyzeServiceReferencesPass extends AbstractRecursivePass
                     $targetId,
                     $targetDefinition,
                     $value,
-                    $this->lazy || $targetDefinition?->isLazy(),
+                    $this->lazy || ($targetDefinition && $targetDefinition->isLazy()),
                     true
                 );
             }
@@ -137,16 +135,8 @@ class AnalyzeServiceReferencesPass extends AbstractRecursivePass
 
         $byFactory = $this->byFactory;
         $this->byFactory = true;
-        if (\is_string($factory = $value->getFactory()) && str_starts_with($factory, '@=')) {
-            if (!class_exists(Expression::class)) {
-                throw new LogicException('Expressions cannot be used in service factories without the ExpressionLanguage component. Try running "composer require symfony/expression-language".');
-            }
-
-            $factory = new Expression(substr($factory, 2));
-        }
-        $this->processValue($factory);
+        $this->processValue($value->getFactory());
         $this->byFactory = $byFactory;
-
         $this->processValue($value->getArguments());
 
         $properties = $value->getProperties();

@@ -31,7 +31,7 @@ use Symfony\Component\HttpFoundation\Response;
 class HttpKernelBrowser extends AbstractBrowser
 {
     protected $kernel;
-    private bool $catchExceptions = true;
+    private $catchExceptions = true;
 
     /**
      * @param array $server The server parameters (equivalent of $_SERVER)
@@ -54,6 +54,8 @@ class HttpKernelBrowser extends AbstractBrowser
     }
 
     /**
+     * {@inheritdoc}
+     *
      * @param Request $request
      *
      * @return Response
@@ -70,6 +72,8 @@ class HttpKernelBrowser extends AbstractBrowser
     }
 
     /**
+     * {@inheritdoc}
+     *
      * @param Request $request
      *
      * @return string
@@ -83,7 +87,7 @@ class HttpKernelBrowser extends AbstractBrowser
 
         $requires = '';
         foreach (get_declared_classes() as $class) {
-            if (str_starts_with($class, 'ComposerAutoloaderInit')) {
+            if (0 === strpos($class, 'ComposerAutoloaderInit')) {
                 $r = new \ReflectionClass($class);
                 $file = \dirname($r->getFileName(), 2).'/autoload.php';
                 if (file_exists($file)) {
@@ -123,7 +127,12 @@ echo serialize($response);
 EOF;
     }
 
-    protected function filterRequest(DomRequest $request): Request
+    /**
+     * {@inheritdoc}
+     *
+     * @return Request
+     */
+    protected function filterRequest(DomRequest $request)
     {
         $httpRequest = Request::create($request->getUri(), $request->getMethod(), $request->getParameters(), $request->getCookies(), $request->getFiles(), $server = $request->getServer(), $request->getContent());
         if (!isset($server['HTTP_ACCEPT'])) {
@@ -147,8 +156,10 @@ EOF;
      * an invalid UploadedFile is returned with an error set to UPLOAD_ERR_INI_SIZE.
      *
      * @see UploadedFile
+     *
+     * @return array
      */
-    protected function filterFiles(array $files): array
+    protected function filterFiles(array $files)
     {
         $filtered = [];
         foreach ($files as $key => $value) {
@@ -179,9 +190,13 @@ EOF;
     }
 
     /**
+     * {@inheritdoc}
+     *
      * @param Response $response
+     *
+     * @return DomResponse
      */
-    protected function filterResponse(object $response): DomResponse
+    protected function filterResponse(object $response)
     {
         // this is needed to support StreamedResponse
         ob_start();

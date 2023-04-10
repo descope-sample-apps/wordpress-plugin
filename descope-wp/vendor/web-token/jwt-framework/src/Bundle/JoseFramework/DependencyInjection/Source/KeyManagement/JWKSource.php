@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2014-2020 Spomky-Labs
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the LICENSE file for details.
+ */
+
 namespace Jose\Bundle\JoseFramework\DependencyInjection\Source\KeyManagement;
 
 use function array_key_exists;
@@ -18,15 +27,18 @@ use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 class JWKSource implements Source
 {
     /**
-     * @var JWKSourceInterface[]|null
+     * @var null|JWKSourceInterface[]
      */
-    private ?array $jwkSources = null;
+    private $jwkSources;
 
     public function name(): string
     {
         return 'keys';
     }
 
+    /**
+     * @throws LogicException if the definition is not configured
+     */
     public function load(array $configs, ContainerBuilder $container): void
     {
         $sources = $this->getJWKSources();
@@ -53,14 +65,14 @@ class JWKSource implements Source
             ->arrayPrototype()
             ->validate()
             ->ifTrue(function ($config): bool {
-                return count($config) !== 1;
+                return 1 !== count($config);
             })
             ->thenInvalid('One key type must be set.')
             ->end()
-            ->children();
+            ->children()
+        ;
         foreach ($this->getJWKSources() as $name => $source) {
-            $sourceNode = $sourceNodeBuilder->arrayNode($name)
-                ->canBeUnset();
+            $sourceNode = $sourceNodeBuilder->arrayNode($name)->canBeUnset();
             $source->addConfiguration($sourceNode);
         }
     }
@@ -71,18 +83,20 @@ class JWKSource implements Source
     }
 
     /**
+     * @throws InvalidArgumentException if the source object is invalid
+     *
      * @return JWKSourceInterface[]
      */
     private function getJWKSources(): array
     {
-        if ($this->jwkSources !== null) {
+        if (null !== $this->jwkSources) {
             return $this->jwkSources;
         }
 
         // load bundled adapter factories
         $tempContainer = new ContainerBuilder();
         $tempContainer->registerForAutoconfiguration(JWKSourceInterface::class)->addTag('jose.jwk_source');
-        $loader = new PhpFileLoader($tempContainer, new FileLocator(__DIR__ . '/../../../Resources/config'));
+        $loader = new PhpFileLoader($tempContainer, new FileLocator(__DIR__.'/../../../Resources/config'));
         $loader->load('jwk_sources.php');
         $tempContainer->compile();
 
@@ -90,7 +104,7 @@ class JWKSource implements Source
         $jwkSources = [];
         foreach (array_keys($services) as $id) {
             $factory = $tempContainer->get($id);
-            if (! $factory instanceof JWKSourceInterface) {
+            if (!$factory instanceof JWKSourceInterface) {
                 throw new InvalidArgumentException('Invalid object');
             }
             $jwkSources[str_replace('-', '_', $factory->getKey())] = $factory;

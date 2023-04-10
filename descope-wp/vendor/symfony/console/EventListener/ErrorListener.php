@@ -24,7 +24,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 class ErrorListener implements EventSubscriberInterface
 {
-    private ?LoggerInterface $logger;
+    private $logger;
 
     public function __construct(LoggerInterface $logger = null)
     {
@@ -69,7 +69,7 @@ class ErrorListener implements EventSubscriberInterface
         $this->logger->debug('Command "{command}" exited with code "{code}"', ['command' => $inputString, 'code' => $exitCode]);
     }
 
-    public static function getSubscribedEvents(): array
+    public static function getSubscribedEvents()
     {
         return [
             ConsoleEvents::ERROR => ['onConsoleError', -128],
@@ -79,10 +79,10 @@ class ErrorListener implements EventSubscriberInterface
 
     private static function getInputString(ConsoleEvent $event): ?string
     {
-        $commandName = $event->getCommand()?->getName();
+        $commandName = $event->getCommand() ? $event->getCommand()->getName() : null;
         $input = $event->getInput();
 
-        if ($input instanceof \Stringable) {
+        if (method_exists($input, '__toString')) {
             if ($commandName) {
                 return str_replace(["'$commandName'", "\"$commandName\""], $commandName, (string) $input);
             }

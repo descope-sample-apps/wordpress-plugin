@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2014-2020 Spomky-Labs
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the LICENSE file for details.
+ */
+
 namespace Jose\Bundle\JoseFramework\DependencyInjection\Source\Encryption;
 
 use Jose\Bundle\JoseFramework\DependencyInjection\Source\Source;
@@ -34,13 +43,14 @@ class JWELoader implements Source
                     $itemConfig['header_checkers'],
                 ])
                 ->addTag('jose.jwe_loader')
-                ->setPublic($itemConfig['is_public']);
+                ->setPublic($itemConfig['is_public'])
+            ;
             foreach ($itemConfig['tags'] as $id => $attributes) {
                 $definition->addTag($id, $attributes);
             }
 
             $container->setDefinition($service_id, $definition);
-            $container->registerAliasForArgument($service_id, JWELoaderService::class, $name . 'JweLoader');
+            $container->registerAliasForArgument($service_id, JWELoaderService::class, $name.'JweLoader');
         }
     }
 
@@ -61,50 +71,45 @@ class JWELoader implements Source
             ->info('A list of key encryption algorithm aliases.')
             ->useAttributeAsKey('name')
             ->isRequired()
-            ->scalarPrototype()
-            ->end()
+            ->scalarPrototype()->end()
             ->end()
             ->arrayNode('content_encryption_algorithms')
             ->info('A list of key encryption algorithm aliases.')
             ->useAttributeAsKey('name')
             ->isRequired()
-            ->scalarPrototype()
-            ->end()
+            ->scalarPrototype()->end()
             ->end()
             ->arrayNode('compression_methods')
             ->info('A list of compression method aliases.')
             ->useAttributeAsKey('name')
             ->defaultValue(['DEF'])
-            ->scalarPrototype()
-            ->end()
+            ->scalarPrototype()->end()
             ->end()
             ->arrayNode('serializers')
             ->info('A list of signature serializer aliases.')
             ->useAttributeAsKey('name')
             ->requiresAtLeastOneElement()
-            ->scalarPrototype()
-            ->end()
+            ->scalarPrototype()->end()
             ->end()
             ->arrayNode('header_checkers')
             ->info('A list of header checker aliases.')
             ->useAttributeAsKey('name')
             ->treatNullLike([])
             ->treatFalseLike([])
-            ->scalarPrototype()
-            ->end()
+            ->scalarPrototype()->end()
             ->end()
             ->arrayNode('tags')
             ->info('A list of tags to be associated to the service.')
             ->useAttributeAsKey('name')
             ->treatNullLike([])
             ->treatFalseLike([])
-            ->variablePrototype()
+            ->variablePrototype()->end()
             ->end()
             ->end()
             ->end()
             ->end()
             ->end()
-            ->end();
+        ;
     }
 
     public function prepend(ContainerBuilder $container, array $config): array

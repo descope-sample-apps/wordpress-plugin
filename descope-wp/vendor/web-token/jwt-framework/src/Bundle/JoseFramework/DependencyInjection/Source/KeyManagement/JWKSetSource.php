@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2014-2020 Spomky-Labs
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the LICENSE file for details.
+ */
+
 namespace Jose\Bundle\JoseFramework\DependencyInjection\Source\KeyManagement;
 
 use function array_key_exists;
@@ -20,13 +29,16 @@ class JWKSetSource implements Source
     /**
      * @var JWKSetSourceInterface[]
      */
-    private ?array $jwkset_sources = null;
+    private $jwkset_sources;
 
     public function name(): string
     {
         return 'key_sets';
     }
 
+    /**
+     * @throws LogicException if the definition is not configured
+     */
     public function load(array $configs, ContainerBuilder $container): void
     {
         $sources = $this->getJWKSetSources();
@@ -53,14 +65,14 @@ class JWKSetSource implements Source
             ->arrayPrototype()
             ->validate()
             ->ifTrue(function ($config): bool {
-                return count($config) !== 1;
+                return 1 !== count($config);
             })
             ->thenInvalid('One key set type must be set.')
             ->end()
-            ->children();
+            ->children()
+        ;
         foreach ($this->getJWKSetSources() as $name => $source) {
-            $sourceNode = $sourceNodeBuilder->arrayNode($name)
-                ->canBeUnset();
+            $sourceNode = $sourceNodeBuilder->arrayNode($name)->canBeUnset();
             $source->addConfiguration($sourceNode);
         }
     }
@@ -71,18 +83,20 @@ class JWKSetSource implements Source
     }
 
     /**
+     * @throws InvalidArgumentException if the source object is not valid
+     *
      * @return JWKSetSourceInterface[]
      */
     private function getJWKSetSources(): array
     {
-        if ($this->jwkset_sources !== null) {
+        if (null !== $this->jwkset_sources) {
             return $this->jwkset_sources;
         }
 
         // load bundled adapter factories
         $tempContainer = new ContainerBuilder();
         $tempContainer->registerForAutoconfiguration(JWKSetSourceInterface::class)->addTag('jose.jwkset_source');
-        $loader = new PhpFileLoader($tempContainer, new FileLocator(__DIR__ . '/../../../Resources/config'));
+        $loader = new PhpFileLoader($tempContainer, new FileLocator(__DIR__.'/../../../Resources/config'));
         $loader->load('jwkset_sources.php');
         $tempContainer->compile();
 
@@ -90,7 +104,7 @@ class JWKSetSource implements Source
         $jwkset_sources = [];
         foreach (array_keys($services) as $id) {
             $factory = $tempContainer->get($id);
-            if (! $factory instanceof JWKSetSourceInterface) {
+            if (!$factory instanceof JWKSetSourceInterface) {
                 throw new InvalidArgumentException('Invalid object');
             }
             $jwkset_sources[str_replace('-', '_', $factory->getKeySet())] = $factory;

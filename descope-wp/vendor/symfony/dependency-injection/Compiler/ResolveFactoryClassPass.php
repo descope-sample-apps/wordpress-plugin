@@ -19,7 +19,10 @@ use Symfony\Component\DependencyInjection\Exception\RuntimeException;
  */
 class ResolveFactoryClassPass extends AbstractRecursivePass
 {
-    protected function processValue(mixed $value, bool $isRoot = false): mixed
+    /**
+     * {@inheritdoc}
+     */
+    protected function processValue($value, bool $isRoot = false)
     {
         if ($value instanceof Definition && \is_array($factory = $value->getFactory()) && null === $factory[0]) {
             if (null === $class = $value->getClass()) {

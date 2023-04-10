@@ -20,7 +20,6 @@ use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\DependencyInjection\TypedReference;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Symfony\Contracts\Service\Attribute\SubscribedService;
 use Symfony\Contracts\Service\ServiceProviderInterface;
 use Symfony\Contracts\Service\ServiceSubscriberInterface;
 
@@ -31,7 +30,7 @@ use Symfony\Contracts\Service\ServiceSubscriberInterface;
  */
 class RegisterServiceSubscribersPass extends AbstractRecursivePass
 {
-    protected function processValue(mixed $value, bool $isRoot = false): mixed
+    protected function processValue($value, bool $isRoot = false)
     {
         if (!$value instanceof Definition || $value->isAbstract() || $value->isSynthetic() || !$value->hasTag('container.service_subscriber')) {
             return parent::processValue($value, $isRoot);
@@ -69,19 +68,10 @@ class RegisterServiceSubscribersPass extends AbstractRecursivePass
             throw new InvalidArgumentException(sprintf('Service "%s" must implement interface "%s".', $this->currentId, ServiceSubscriberInterface::class));
         }
         $class = $r->name;
-        // to remove when symfony/dependency-injection will stop being compatible with symfony/framework-bundle<6.0
         $replaceDeprecatedSession = $this->container->has('.session.deprecated') && $r->isSubclassOf(AbstractController::class);
         $subscriberMap = [];
 
         foreach ($class::getSubscribedServices() as $key => $type) {
-            $attributes = [];
-
-            if ($type instanceof SubscribedService) {
-                $key = $type->key;
-                $attributes = $type->attributes;
-                $type = ($type->nullable ? '?' : '').($type->type ?? throw new InvalidArgumentException(sprintf('When "%s::getSubscribedServices()" returns "%s", a type must be set.', $class, SubscribedService::class)));
-            }
-
             if (!\is_string($type) || !preg_match('/(?(DEFINE)(?<cn>[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*+))(?(DEFINE)(?<fqcn>(?&cn)(?:\\\\(?&cn))*+))^\??(?&fqcn)(?:(?:\|(?&fqcn))*+|(?:&(?&fqcn))*+)$/', $type)) {
                 throw new InvalidArgumentException(sprintf('"%s::getSubscribedServices()" must return valid PHP types for service "%s" key "%s", "%s" returned.', $class, $this->currentId, $key, \is_string($type) ? $type : get_debug_type($type)));
             }
@@ -99,7 +89,7 @@ class RegisterServiceSubscribersPass extends AbstractRecursivePass
                 }
                 if ($replaceDeprecatedSession && SessionInterface::class === $type) {
                     // This prevents triggering the deprecation when building the container
-                    // to remove when symfony/dependency-injection will stop being compatible with symfony/framework-bundle<6.0
+                    // Should be removed in Symfony 6.0
                     $type = '.session.deprecated';
                 }
                 $serviceMap[$key] = new Reference($type);
@@ -118,7 +108,7 @@ class RegisterServiceSubscribersPass extends AbstractRecursivePass
                 $name = $this->container->has($type.' $'.$camelCaseName) ? $camelCaseName : $name;
             }
 
-            $subscriberMap[$key] = new TypedReference((string) $serviceMap[$key], $type, $optionalBehavior ?: ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE, $name, $attributes);
+            $subscriberMap[$key] = new TypedReference((string) $serviceMap[$key], $type, $optionalBehavior ?: ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE, $name);
             unset($serviceMap[$key]);
         }
 

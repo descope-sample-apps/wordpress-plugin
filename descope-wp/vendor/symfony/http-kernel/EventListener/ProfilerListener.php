@@ -32,17 +32,17 @@ use Symfony\Component\HttpKernel\Profiler\Profiler;
  */
 class ProfilerListener implements EventSubscriberInterface
 {
-    private Profiler $profiler;
-    private ?RequestMatcherInterface $matcher;
-    private bool $onlyException;
-    private bool $onlyMainRequests;
-    private ?\Throwable $exception = null;
+    protected $profiler;
+    protected $matcher;
+    protected $onlyException;
+    protected $onlyMainRequests;
+    protected $exception;
     /** @var \SplObjectStorage<Request, Profile> */
-    private \SplObjectStorage $profiles;
-    private RequestStack $requestStack;
-    private ?string $collectParameter;
+    protected $profiles;
+    protected $requestStack;
+    protected $collectParameter;
     /** @var \SplObjectStorage<Request, Request|null> */
-    private \SplObjectStorage $parents;
+    protected $parents;
 
     /**
      * @param bool $onlyException    True if the profiler only collects data when an exception occurs, false otherwise
@@ -87,7 +87,7 @@ class ProfilerListener implements EventSubscriberInterface
 
         $request = $event->getRequest();
         if (null !== $this->collectParameter && null !== $collectParameterValue = $request->get($this->collectParameter)) {
-            true === $collectParameterValue || filter_var($collectParameterValue, \FILTER_VALIDATE_BOOL) ? $this->profiler->enable() : $this->profiler->disable();
+            true === $collectParameterValue || filter_var($collectParameterValue, \FILTER_VALIDATE_BOOLEAN) ? $this->profiler->enable() : $this->profiler->disable();
         }
 
         $exception = $this->exception;
@@ -97,7 +97,7 @@ class ProfilerListener implements EventSubscriberInterface
             return;
         }
 
-        $session = $request->hasPreviousSession() ? $request->getSession() : null;
+        $session = $request->hasPreviousSession() && $request->hasSession() ? $request->getSession() : null;
 
         if ($session instanceof Session) {
             $usageIndexValue = $usageIndexReference = &$session->getUsageIndex();

@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2014-2020 Spomky-Labs
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the LICENSE file for details.
+ */
+
 namespace Jose\Bundle\JoseFramework\Services;
 
 use Jose\Component\Core\AlgorithmManagerFactory;
@@ -9,10 +18,20 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class JWSBuilderFactory
 {
-    public function __construct(
-        private readonly AlgorithmManagerFactory $signatureAlgorithmManagerFactory,
-        private readonly EventDispatcherInterface $eventDispatcher
-    ) {
+    /**
+     * @var EventDispatcherInterface
+     */
+    private $eventDispatcher;
+
+    /**
+     * @var AlgorithmManagerFactory
+     */
+    private $signatureAlgorithmManagerFactory;
+
+    public function __construct(AlgorithmManagerFactory $signatureAlgorithmManagerFactory, EventDispatcherInterface $eventDispatcher)
+    {
+        $this->signatureAlgorithmManagerFactory = $signatureAlgorithmManagerFactory;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**

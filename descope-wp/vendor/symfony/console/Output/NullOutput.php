@@ -24,65 +24,104 @@ use Symfony\Component\Console\Formatter\OutputFormatterInterface;
  */
 class NullOutput implements OutputInterface
 {
-    private NullOutputFormatter $formatter;
+    private $formatter;
 
+    /**
+     * {@inheritdoc}
+     */
     public function setFormatter(OutputFormatterInterface $formatter)
     {
         // do nothing
     }
 
-    public function getFormatter(): OutputFormatterInterface
+    /**
+     * {@inheritdoc}
+     */
+    public function getFormatter()
     {
+        if ($this->formatter) {
+            return $this->formatter;
+        }
         // to comply with the interface we must return a OutputFormatterInterface
-        return $this->formatter ??= new NullOutputFormatter();
+        return $this->formatter = new NullOutputFormatter();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function setDecorated(bool $decorated)
     {
         // do nothing
     }
 
-    public function isDecorated(): bool
+    /**
+     * {@inheritdoc}
+     */
+    public function isDecorated()
     {
         return false;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function setVerbosity(int $level)
     {
         // do nothing
     }
 
-    public function getVerbosity(): int
+    /**
+     * {@inheritdoc}
+     */
+    public function getVerbosity()
     {
         return self::VERBOSITY_QUIET;
     }
 
-    public function isQuiet(): bool
+    /**
+     * {@inheritdoc}
+     */
+    public function isQuiet()
     {
         return true;
     }
 
-    public function isVerbose(): bool
+    /**
+     * {@inheritdoc}
+     */
+    public function isVerbose()
     {
         return false;
     }
 
-    public function isVeryVerbose(): bool
+    /**
+     * {@inheritdoc}
+     */
+    public function isVeryVerbose()
     {
         return false;
     }
 
-    public function isDebug(): bool
+    /**
+     * {@inheritdoc}
+     */
+    public function isDebug()
     {
         return false;
     }
 
-    public function writeln(string|iterable $messages, int $options = self::OUTPUT_NORMAL)
+    /**
+     * {@inheritdoc}
+     */
+    public function writeln($messages, int $options = self::OUTPUT_NORMAL)
     {
         // do nothing
     }
 
-    public function write(string|iterable $messages, bool $newline = false, int $options = self::OUTPUT_NORMAL)
+    /**
+     * {@inheritdoc}
+     */
+    public function write($messages, bool $newline = false, int $options = self::OUTPUT_NORMAL)
     {
         // do nothing
     }

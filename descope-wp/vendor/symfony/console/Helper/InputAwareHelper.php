@@ -23,6 +23,9 @@ abstract class InputAwareHelper extends Helper implements InputAwareInterface
 {
     protected $input;
 
+    /**
+     * {@inheritdoc}
+     */
     public function setInput(InputInterface $input)
     {
         $this->input = $input;

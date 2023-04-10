@@ -2,9 +2,6 @@
 
 declare(strict_types=1);
 
-use Jose\Bundle\JoseFramework\Services\NestedTokenBuilderFactory;
-use Jose\Bundle\JoseFramework\Services\NestedTokenLoaderFactory;
-
 /*
  * The MIT License (MIT)
  *
@@ -14,18 +11,21 @@ use Jose\Bundle\JoseFramework\Services\NestedTokenLoaderFactory;
  * of the MIT license.  See the LICENSE file for details.
  */
 
+use Jose\Bundle\JoseFramework\Services;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 return function (ContainerConfigurator $container): void {
-    $container = $container->services()
-        ->defaults()
+    $container = $container->services()->defaults()
         ->private()
         ->autoconfigure()
-        ->autowire();
+        ->autowire()
+    ;
 
-    $container->set(NestedTokenBuilderFactory::class)
-        ->public();
+    $container->set(Services\NestedTokenBuilderFactory::class)
+        ->public()
+    ;
 
-    $container->set(NestedTokenLoaderFactory::class)
-        ->public();
+    $container->set(Services\NestedTokenLoaderFactory::class)
+        ->public()
+    ;
 };

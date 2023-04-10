@@ -14,8 +14,6 @@ namespace Symfony\Component\HttpKernel\DependencyInjection;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Reference;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Log\Logger;
 
 /**
@@ -25,6 +23,9 @@ use Symfony\Component\HttpKernel\Log\Logger;
  */
 class LoggerPass implements CompilerPassInterface
 {
+    /**
+     * {@inheritdoc}
+     */
     public function process(ContainerBuilder $container)
     {
         $container->setAlias(LoggerInterface::class, 'logger')
@@ -35,7 +36,6 @@ class LoggerPass implements CompilerPassInterface
         }
 
         $container->register('logger', Logger::class)
-            ->setArguments([null, null, null, new Reference(RequestStack::class)])
             ->setPublic(false);
     }
 }

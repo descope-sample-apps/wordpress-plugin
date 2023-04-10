@@ -20,16 +20,16 @@ use Symfony\Component\Config\Definition\EnumNode;
  */
 class EnumNodeDefinition extends ScalarNodeDefinition
 {
-    private array $values;
+    private $values;
 
     /**
      * @return $this
      */
-    public function values(array $values): static
+    public function values(array $values)
     {
         $values = array_unique($values);
 
-        if (!$values) {
+        if (empty($values)) {
             throw new \InvalidArgumentException('->values() must be called with at least one value.');
         }
 
@@ -41,11 +41,13 @@ class EnumNodeDefinition extends ScalarNodeDefinition
     /**
      * Instantiate a Node.
      *
+     * @return EnumNode
+     *
      * @throws \RuntimeException
      */
-    protected function instantiateNode(): EnumNode
+    protected function instantiateNode()
     {
-        if (!isset($this->values)) {
+        if (null === $this->values) {
             throw new \RuntimeException('You must call ->values() on enum nodes.');
         }
 

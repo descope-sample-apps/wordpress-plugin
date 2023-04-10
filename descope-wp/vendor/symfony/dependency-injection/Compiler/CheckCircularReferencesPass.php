@@ -26,8 +26,8 @@ use Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceExce
  */
 class CheckCircularReferencesPass implements CompilerPassInterface
 {
-    private array $currentPath;
-    private array $checkedNodes;
+    private $currentPath;
+    private $checkedNodes;
 
     /**
      * Checks the ContainerBuilder object for circular references.

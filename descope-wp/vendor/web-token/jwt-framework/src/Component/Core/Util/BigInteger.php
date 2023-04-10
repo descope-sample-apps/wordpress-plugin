@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2014-2020 Spomky-Labs
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the LICENSE file for details.
+ */
+
 namespace Jose\Component\Core\Util;
 
 use Brick\Math\BigInteger as BrickBigInteger;
@@ -11,17 +20,27 @@ use InvalidArgumentException;
 /**
  * @internal
  */
-final class BigInteger
+class BigInteger
 {
-    private function __construct(
-        private readonly BrickBigInteger $value
-    ) {
+    /**
+     * Holds the BigInteger's value.
+     *
+     * @var BrickBigInteger
+     */
+    private $value;
+
+    private function __construct(BrickBigInteger $value)
+    {
+        $this->value = $value;
     }
 
+    /**
+     * @return BigInteger
+     */
     public static function createFromBinaryString(string $value): self
     {
         $res = unpack('H*', $value);
-        if ($res === false) {
+        if (false === $res) {
             throw new InvalidArgumentException('Unable to convert the value');
         }
         $data = current($res);
@@ -29,11 +48,17 @@ final class BigInteger
         return new self(BrickBigInteger::fromBase($data, 16));
     }
 
+    /**
+     * @return BigInteger
+     */
     public static function createFromDecimal(int $value): self
     {
         return new self(BrickBigInteger::of($value));
     }
 
+    /**
+     * @return BigInteger
+     */
     public static function createFromBigInteger(BrickBigInteger $value): self
     {
         return new self($value);
@@ -49,9 +74,9 @@ final class BigInteger
         }
 
         $temp = $this->value->toBase(16);
-        $temp = 0 !== (mb_strlen($temp, '8bit') & 1) ? '0' . $temp : $temp;
+        $temp = 0 !== (mb_strlen($temp, '8bit') & 1) ? '0'.$temp : $temp;
         $temp = hex2bin($temp);
-        if ($temp === false) {
+        if (false === $temp) {
             throw new InvalidArgumentException('Unable to convert the value into bytes');
         }
 
@@ -60,6 +85,10 @@ final class BigInteger
 
     /**
      * Adds two BigIntegers.
+     *
+     *  @param BigInteger $y
+     *
+     *  @return BigInteger
      */
     public function add(self $y): self
     {
@@ -70,6 +99,10 @@ final class BigInteger
 
     /**
      * Subtracts two BigIntegers.
+     *
+     *  @param BigInteger $y
+     *
+     *  @return BigInteger
      */
     public function subtract(self $y): self
     {
@@ -80,6 +113,10 @@ final class BigInteger
 
     /**
      * Multiplies two BigIntegers.
+     *
+     * @param BigInteger $x
+     *
+     *  @return BigInteger
      */
     public function multiply(self $x): self
     {
@@ -90,6 +127,10 @@ final class BigInteger
 
     /**
      * Divides two BigIntegers.
+     *
+     * @param BigInteger $x
+     *
+     *  @return BigInteger
      */
     public function divide(self $x): self
     {
@@ -100,6 +141,11 @@ final class BigInteger
 
     /**
      * Performs modular exponentiation.
+     *
+     * @param BigInteger $e
+     * @param BigInteger $n
+     *
+     * @return BigInteger
      */
     public function modPow(self $e, self $n): self
     {
@@ -110,6 +156,10 @@ final class BigInteger
 
     /**
      * Performs modular exponentiation.
+     *
+     * @param BigInteger $d
+     *
+     * @return BigInteger
      */
     public function mod(self $d): self
     {
@@ -118,34 +168,52 @@ final class BigInteger
         return new self($value);
     }
 
-    public function modInverse(self $m): self
+    public function modInverse(BigInteger $m): BigInteger
     {
         return new self($this->value->modInverse($m->value));
     }
 
     /**
      * Compares two numbers.
+     *
+     * @param BigInteger $y
      */
     public function compare(self $y): int
     {
         return $this->value->compareTo($y->value);
     }
 
+    /**
+     * @param BigInteger $y
+     */
     public function equals(self $y): bool
     {
         return $this->value->isEqualTo($y->value);
     }
 
+    /**
+     * @param BigInteger $y
+     *
+     * @return BigInteger
+     */
     public static function random(self $y): self
     {
         return new self(BrickBigInteger::randomRange(0, $y->value));
     }
 
+    /**
+     * @param BigInteger $y
+     *
+     * @return BigInteger
+     */
     public function gcd(self $y): self
     {
         return new self($this->value->gcd($y->value));
     }
 
+    /**
+     * @param BigInteger $y
+     */
     public function lowerThan(self $y): bool
     {
         return $this->value->isLessThan($y->value);

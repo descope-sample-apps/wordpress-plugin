@@ -37,18 +37,22 @@ use Symfony\Component\Yaml\Yaml;
  */
 class YamlDumper extends Dumper
 {
-    private YmlDumper $dumper;
+    private $dumper;
 
     /**
      * Dumps the service container as an YAML string.
+     *
+     * @return string
      */
-    public function dump(array $options = []): string
+    public function dump(array $options = [])
     {
-        if (!class_exists(YmlDumper::class)) {
+        if (!class_exists(\Symfony\Component\Yaml\Dumper::class)) {
             throw new LogicException('Unable to dump the container as the Symfony Yaml Component is not installed.');
         }
 
-        $this->dumper ??= new YmlDumper();
+        if (null === $this->dumper) {
+            $this->dumper = new YmlDumper();
+        }
 
         return $this->container->resolveEnvPlaceholders($this->addParameters()."\n".$this->addServices());
     }
@@ -57,7 +61,7 @@ class YamlDumper extends Dumper
     {
         $code = "    $id:\n";
         if ($class = $definition->getClass()) {
-            if (str_starts_with($class, '\\')) {
+            if ('\\' === substr($class, 0, 1)) {
                 $class = substr($class, 1);
             }
 
@@ -221,8 +225,12 @@ class YamlDumper extends Dumper
 
     /**
      * Dumps callable to YAML format.
+     *
+     * @param mixed $callable
+     *
+     * @return mixed
      */
-    private function dumpCallable(mixed $callable): mixed
+    private function dumpCallable($callable)
     {
         if (\is_array($callable)) {
             if ($callable[0] instanceof Reference) {
@@ -238,14 +246,16 @@ class YamlDumper extends Dumper
     /**
      * Dumps the value to YAML format.
      *
+     * @return mixed
+     *
      * @throws RuntimeException When trying to dump object or resource
      */
-    private function dumpValue(mixed $value): mixed
+    private function dumpValue($value)
     {
         if ($value instanceof ServiceClosureArgument) {
             $value = $value->getValues()[0];
 
-            return new TaggedValue('service_closure', $this->dumpValue($value));
+            return new TaggedValue('service_closure', $this->getServiceCall((string) $value, $value));
         }
         if ($value instanceof ArgumentInterface) {
             $tag = $value;
@@ -265,12 +275,6 @@ class YamlDumper extends Dumper
                     if (null !== $tag->getDefaultPriorityMethod()) {
                         $content['default_priority_method'] = $tag->getDefaultPriorityMethod();
                     }
-                }
-                if ($excludes = $tag->getExclude()) {
-                    if (!\is_array($content)) {
-                        $content = ['tag' => $content];
-                    }
-                    $content['exclude'] = 1 === \count($excludes) ? $excludes[0] : $excludes;
                 }
 
                 return new TaggedValue($value instanceof TaggedIteratorArgument ? 'tagged_iterator' : 'tagged_locator', $content);
@@ -303,7 +307,7 @@ class YamlDumper extends Dumper
         } elseif ($value instanceof Definition) {
             return new TaggedValue('service', (new Parser())->parse("_:\n".$this->addService('_', $value), Yaml::PARSE_CUSTOM_TAGS)['_']['_']);
         } elseif ($value instanceof \UnitEnum) {
-            return new TaggedValue('php/const', sprintf('%s::%s', $value::class, $value->name));
+            return new TaggedValue('php/const', sprintf('%s::%s', \get_class($value), $value->name));
         } elseif ($value instanceof AbstractArgument) {
             return new TaggedValue('abstract', $value->getText());
         } elseif (\is_object($value) || \is_resource($value)) {

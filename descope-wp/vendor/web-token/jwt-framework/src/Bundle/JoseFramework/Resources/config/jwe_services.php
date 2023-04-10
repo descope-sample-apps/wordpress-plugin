@@ -2,11 +2,6 @@
 
 declare(strict_types=1);
 
-use Jose\Bundle\JoseFramework\Services\JWEBuilderFactory;
-use Jose\Bundle\JoseFramework\Services\JWEDecrypterFactory;
-use Jose\Bundle\JoseFramework\Services\JWELoaderFactory;
-use Jose\Component\Encryption\JWETokenSupport;
-
 /*
  * The MIT License (MIT)
  *
@@ -16,23 +11,28 @@ use Jose\Component\Encryption\JWETokenSupport;
  * of the MIT license.  See the LICENSE file for details.
  */
 
+use Jose\Bundle\JoseFramework\Services;
+use Jose\Component\Encryption;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 return function (ContainerConfigurator $container): void {
-    $container = $container->services()
-        ->defaults()
+    $container = $container->services()->defaults()
         ->private()
         ->autoconfigure()
-        ->autowire();
+        ->autowire()
+    ;
 
-    $container->set(JWEBuilderFactory::class)
-        ->public();
+    $container->set(Services\JWEBuilderFactory::class)
+        ->public()
+    ;
 
-    $container->set(JWEDecrypterFactory::class)
-        ->public();
+    $container->set(Services\JWEDecrypterFactory::class)
+        ->public()
+    ;
 
-    $container->set(JWELoaderFactory::class)
-        ->public();
+    $container->set(Services\JWELoaderFactory::class)
+        ->public()
+    ;
 
-    $container->set(JWETokenSupport::class);
+    $container->set(Encryption\JWETokenSupport::class);
 };

@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2014-2020 Spomky-Labs
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the LICENSE file for details.
+ */
+
 namespace Jose\Bundle\JoseFramework\DependencyInjection\Source\KeyManagement\JWKSetSource;
 
 use Jose\Bundle\JoseFramework\DependencyInjection\Source\AbstractSource;
@@ -14,14 +23,17 @@ use Symfony\Component\DependencyInjection\Reference;
 
 class JKU extends AbstractSource implements JWKSetSource
 {
-    /**
-     * @param array<string, mixed> $config
-     */
     public function createDefinition(ContainerBuilder $container, array $config): Definition
     {
         $definition = new Definition(JWKSet::class);
-        $definition->setFactory([new Reference(JKUFactory::class), 'loadFromUrl']);
-        $definition->setArguments([$config['url'], $config['headers']]);
+        $definition->setFactory([
+            new Reference(JKUFactory::class),
+            'loadFromUrl',
+        ]);
+        $definition->setArguments([
+            $config['url'],
+            $config['headers'],
+        ]);
         $definition->addTag('jose.jwkset');
 
         return $definition;
@@ -46,9 +58,9 @@ class JKU extends AbstractSource implements JWKSetSource
             ->treatFalseLike([])
             ->info('Header key/value pairs added to the request.')
             ->useAttributeAsKey('name')
-            ->variablePrototype()
+            ->variablePrototype()->end()
             ->end()
             ->end()
-            ->end();
+        ;
     }
 }

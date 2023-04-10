@@ -2,12 +2,19 @@
 
 declare(strict_types=1);
 
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2014-2020 Spomky-Labs
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the LICENSE file for details.
+ */
+
 namespace Jose\Bundle\JoseFramework\DependencyInjection\Source\KeyManagement;
 
 use function count;
-use Jose\Bundle\JoseFramework\DependencyInjection\Compiler\KeyAnalyzerCompilerPass;
-use Jose\Bundle\JoseFramework\DependencyInjection\Compiler\KeysetAnalyzerCompilerPass;
-use Jose\Bundle\JoseFramework\DependencyInjection\Compiler\KeySetControllerCompilerPass;
+use Jose\Bundle\JoseFramework\DependencyInjection\Compiler;
 use Jose\Bundle\JoseFramework\DependencyInjection\Source\Source;
 use Jose\Bundle\JoseFramework\DependencyInjection\Source\SourceWithCompilerPasses;
 use Jose\Component\KeyManagement\Analyzer\KeyAnalyzer;
@@ -24,11 +31,19 @@ class KeyManagementSource implements SourceWithCompilerPasses
     /**
      * @var Source[]
      */
-    private readonly array $sources;
+    private $sources;
 
+    /**
+     * KeyManagementSource constructor.
+     */
     public function __construct()
     {
-        $this->sources = [new JWKSetSource(), new JWKSource(), new JWKUriSource(), new JKUSource()];
+        $this->sources = [
+            new JWKSetSource(),
+            new JWKSource(),
+            new JWKUriSource(),
+            new JKUSource(),
+        ];
     }
 
     public function name(): string
@@ -38,12 +53,12 @@ class KeyManagementSource implements SourceWithCompilerPasses
 
     public function load(array $configs, ContainerBuilder $container): void
     {
-        if (! $this->isEnabled()) {
+        if (!$this->isEnabled()) {
             return;
         }
         $container->registerForAutoconfiguration(KeyAnalyzer::class)->addTag('jose.key_analyzer');
         $container->registerForAutoconfiguration(KeysetAnalyzer::class)->addTag('jose.keyset_analyzer');
-        $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../../../Resources/config'));
+        $loader = new PhpFileLoader($container, new FileLocator(__DIR__.'/../../../Resources/config'));
         $loader->load('analyzers.php');
         $loader->load('jwk_factory.php');
         $loader->load('jwk_services.php');
@@ -55,7 +70,7 @@ class KeyManagementSource implements SourceWithCompilerPasses
 
     public function getNodeDefinition(NodeDefinition $node): void
     {
-        if (! $this->isEnabled()) {
+        if (!$this->isEnabled()) {
             return;
         }
         foreach ($this->sources as $source) {
@@ -65,13 +80,13 @@ class KeyManagementSource implements SourceWithCompilerPasses
 
     public function prepend(ContainerBuilder $container, array $config): array
     {
-        if (! $this->isEnabled()) {
+        if (!$this->isEnabled()) {
             return [];
         }
         $result = [];
         foreach ($this->sources as $source) {
             $prepend = $source->prepend($container, $config);
-            if (count($prepend) !== 0) {
+            if (0 !== count($prepend)) {
                 $result[$source->name()] = $prepend;
             }
         }
@@ -85,9 +100,9 @@ class KeyManagementSource implements SourceWithCompilerPasses
     public function getCompilerPasses(): array
     {
         return [
-            new KeyAnalyzerCompilerPass(),
-            new KeysetAnalyzerCompilerPass(),
-            new KeySetControllerCompilerPass(),
+            new Compiler\KeyAnalyzerCompilerPass(),
+            new Compiler\KeysetAnalyzerCompilerPass(),
+            new Compiler\KeySetControllerCompilerPass(),
         ];
     }
 

@@ -27,8 +27,8 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  */
 class InlineFragmentRenderer extends RoutableFragmentRenderer
 {
-    private HttpKernelInterface $kernel;
-    private ?EventDispatcherInterface $dispatcher;
+    private $kernel;
+    private $dispatcher;
 
     public function __construct(HttpKernelInterface $kernel, EventDispatcherInterface $dispatcher = null)
     {
@@ -37,11 +37,13 @@ class InlineFragmentRenderer extends RoutableFragmentRenderer
     }
 
     /**
+     * {@inheritdoc}
+     *
      * Additional available options:
      *
      *  * alt: an alternative URI to render in case of an error
      */
-    public function render(string|ControllerReference $uri, Request $request, array $options = []): Response
+    public function render($uri, Request $request, array $options = [])
     {
         $reference = null;
         if ($uri instanceof ControllerReference) {
@@ -118,7 +120,9 @@ class InlineFragmentRenderer extends RoutableFragmentRenderer
 
         static $setSession;
 
-        $setSession ??= \Closure::bind(static function ($subRequest, $request) { $subRequest->session = $request->session; }, null, Request::class);
+        if (null === $setSession) {
+            $setSession = \Closure::bind(static function ($subRequest, $request) { $subRequest->session = $request->session; }, null, Request::class);
+        }
         $setSession($subRequest, $request);
 
         if ($request->get('_format')) {
@@ -131,7 +135,10 @@ class InlineFragmentRenderer extends RoutableFragmentRenderer
         return $subRequest;
     }
 
-    public function getName(): string
+    /**
+     * {@inheritdoc}
+     */
+    public function getName()
     {
         return 'inline';
     }

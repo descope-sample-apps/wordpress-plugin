@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2014-2020 Spomky-Labs
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the LICENSE file for details.
+ */
+
 namespace Jose\Component\Signature\Algorithm;
 
 use InvalidArgumentException;
@@ -19,6 +28,9 @@ final class HS512 extends HMAC
         return 'sha512';
     }
 
+    /**
+     * @throws InvalidArgumentException if the key is invalid
+     */
     protected function getKey(JWK $key): string
     {
         $k = parent::getKey($key);

@@ -26,7 +26,7 @@ final class Preloader
         $classes = [];
 
         foreach ($list as $item) {
-            if (str_starts_with($item, $cacheDir)) {
+            if (0 === strpos($item, $cacheDir)) {
                 file_put_contents($file, sprintf("require_once __DIR__.%s;\n", var_export(strtr(substr($item, \strlen($cacheDir)), \DIRECTORY_SEPARATOR, '/'), true)), \FILE_APPEND);
                 continue;
             }
@@ -90,8 +90,10 @@ final class Preloader
             $r->getConstants();
             $r->getDefaultProperties();
 
-            foreach ($r->getProperties(\ReflectionProperty::IS_PUBLIC) as $p) {
-                self::preloadType($p->getType(), $preloaded);
+            if (\PHP_VERSION_ID >= 70400) {
+                foreach ($r->getProperties(\ReflectionProperty::IS_PUBLIC) as $p) {
+                    self::preloadType($p->getType(), $preloaded);
+                }
             }
 
             foreach ($r->getMethods(\ReflectionMethod::IS_PUBLIC) as $m) {
@@ -109,7 +111,7 @@ final class Preloader
 
                 self::preloadType($m->getReturnType(), $preloaded);
             }
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
             // ignore missing classes
         }
     }

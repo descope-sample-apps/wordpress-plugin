@@ -22,7 +22,10 @@ class ResolveTaggedIteratorArgumentPass extends AbstractRecursivePass
 {
     use PriorityTaggedServiceTrait;
 
-    protected function processValue(mixed $value, bool $isRoot = false): mixed
+    /**
+     * {@inheritdoc}
+     */
+    protected function processValue($value, bool $isRoot = false)
     {
         if (!$value instanceof TaggedIteratorArgument) {
             return parent::processValue($value, $isRoot);

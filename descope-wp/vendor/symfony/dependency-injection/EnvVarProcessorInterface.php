@@ -27,12 +27,14 @@ interface EnvVarProcessorInterface
      * @param string   $name   The name of the variable within the namespace
      * @param \Closure $getEnv A closure that allows fetching more env vars
      *
+     * @return mixed
+     *
      * @throws RuntimeException on error
      */
-    public function getEnv(string $prefix, string $name, \Closure $getEnv): mixed;
+    public function getEnv(string $prefix, string $name, \Closure $getEnv);
 
     /**
      * @return string[] The PHP-types managed by getEnv(), keyed by prefixes
      */
-    public static function getProvidedTypes(): array;
+    public static function getProvidedTypes();
 }

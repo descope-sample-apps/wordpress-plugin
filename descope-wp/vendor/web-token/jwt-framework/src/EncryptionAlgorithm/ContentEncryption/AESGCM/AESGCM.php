@@ -2,11 +2,19 @@
 
 declare(strict_types=1);
 
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2014-2020 Spomky-Labs
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the LICENSE file for details.
+ */
+
 namespace Jose\Component\Encryption\Algorithm\ContentEncryption;
 
+use Base64Url\Base64Url;
 use Jose\Component\Encryption\Algorithm\ContentEncryptionAlgorithm;
-use const OPENSSL_RAW_DATA;
-use ParagonIE\ConstantTime\Base64UrlSafe;
 use RuntimeException;
 
 abstract class AESGCM implements ContentEncryptionAlgorithm
@@ -16,42 +24,36 @@ abstract class AESGCM implements ContentEncryptionAlgorithm
         return []; //Irrelevant
     }
 
-    public function encryptContent(
-        string $data,
-        string $cek,
-        string $iv,
-        ?string $aad,
-        string $encoded_protected_header,
-        ?string &$tag = null
-    ): string {
+    /**
+     * @throws RuntimeException if the CEK cannot be encrypted
+     */
+    public function encryptContent(string $data, string $cek, string $iv, ?string $aad, string $encoded_protected_header, ?string &$tag = null): string
+    {
         $calculated_aad = $encoded_protected_header;
-        if ($aad !== null) {
-            $calculated_aad .= '.' . Base64UrlSafe::encodeUnpadded($aad);
+        if (null !== $aad) {
+            $calculated_aad .= '.'.Base64Url::encode($aad);
         }
         $tag = '';
         $result = openssl_encrypt($data, $this->getMode(), $cek, OPENSSL_RAW_DATA, $iv, $tag, $calculated_aad);
-        if ($result === false) {
+        if (false === $result) {
             throw new RuntimeException('Unable to encrypt the content');
         }
 
         return $result;
     }
 
-    public function decryptContent(
-        string $data,
-        string $cek,
-        string $iv,
-        ?string $aad,
-        string $encoded_protected_header,
-        string $tag
-    ): string {
+    /**
+     * @throws RuntimeException if the CEK cannot be decrypted
+     */
+    public function decryptContent(string $data, string $cek, string $iv, ?string $aad, string $encoded_protected_header, string $tag): string
+    {
         $calculated_aad = $encoded_protected_header;
-        if ($aad !== null) {
-            $calculated_aad .= '.' . Base64UrlSafe::encodeUnpadded($aad);
+        if (null !== $aad) {
+            $calculated_aad .= '.'.Base64Url::encode($aad);
         }
 
         $result = openssl_decrypt($data, $this->getMode(), $cek, OPENSSL_RAW_DATA, $iv, $tag, $calculated_aad);
-        if ($result === false) {
+        if (false === $result) {
             throw new RuntimeException('Unable to decrypt the content');
         }
 

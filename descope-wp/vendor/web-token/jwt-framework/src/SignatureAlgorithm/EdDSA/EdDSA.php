@@ -2,21 +2,34 @@
 
 declare(strict_types=1);
 
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2014-2020 Spomky-Labs
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the LICENSE file for details.
+ */
+
 namespace Jose\Component\Signature\Algorithm;
 
+use Base64Url\Base64Url;
 use function extension_loaded;
 use function in_array;
 use InvalidArgumentException;
-use function is_string;
 use Jose\Component\Core\JWK;
-use ParagonIE\ConstantTime\Base64UrlSafe;
 use RuntimeException;
 
 final class EdDSA implements SignatureAlgorithm
 {
+    /**
+     * EdDSA constructor.
+     *
+     * @throws RuntimeException if the extension "sodium" is not available
+     */
     public function __construct()
     {
-        if (! extension_loaded('sodium')) {
+        if (!extension_loaded('sodium')) {
             throw new RuntimeException('The extension "sodium" is not available. Please install it to use this method');
         }
     }
@@ -27,56 +40,44 @@ final class EdDSA implements SignatureAlgorithm
     }
 
     /**
-     * @return non-empty-string
+     * @throws InvalidArgumentException if the key is not private
+     * @throws InvalidArgumentException if the curve is not supported
      */
     public function sign(JWK $key, string $input): string
     {
         $this->checkKey($key);
-        if (! $key->has('d')) {
+        if (!$key->has('d')) {
             throw new InvalidArgumentException('The EC key is not private');
         }
-        $d = $key->get('d');
-        if (! is_string($d) || $d === '') {
-            throw new InvalidArgumentException('Invalid "d" parameter.');
-        }
-        if (! $key->has('x')) {
-            $x = sodium_crypto_sign_publickey_from_secretkey($d);
-        } else {
-            $x = $key->get('x');
-        }
-        if (! is_string($x) || $x === '') {
-            throw new InvalidArgumentException('Invalid "x" parameter.');
-        }
-        /** @var non-empty-string $x */
-        $x = Base64UrlSafe::decode($x);
-        /** @var non-empty-string $d */
-        $d = Base64UrlSafe::decode($d);
-        $secret = $d . $x;
+        $x = Base64Url::decode($key->get('x'));
+        $d = Base64Url::decode($key->get('d'));
+        $secret = $d.$x;
 
-        return match ($key->get('crv')) {
-            'Ed25519' => sodium_crypto_sign_detached($input, $secret),
-            default => throw new InvalidArgumentException('Unsupported curve'),
-        };
+        switch ($key->get('crv')) {
+            case 'Ed25519':
+                return sodium_crypto_sign_detached($input, $secret);
+
+            default:
+                throw new InvalidArgumentException('Unsupported curve');
+        }
     }
 
     /**
-     * @param non-empty-string $signature
+     * @throws InvalidArgumentException if the curve is not supported
      */
     public function verify(JWK $key, string $input, string $signature): bool
     {
         $this->checkKey($key);
-        $x = $key->get('x');
-        if (! is_string($x)) {
-            throw new InvalidArgumentException('Invalid "x" parameter.');
+
+        $public = Base64Url::decode($key->get('x'));
+
+        switch ($key->get('crv')) {
+            case 'Ed25519':
+                return sodium_crypto_sign_verify_detached($signature, $input, $public);
+
+            default:
+                throw new InvalidArgumentException('Unsupported curve');
         }
-
-        /** @var non-empty-string $public */
-        $public = Base64UrlSafe::decode($x);
-
-        return match ($key->get('crv')) {
-            'Ed25519' => sodium_crypto_sign_verify_detached($signature, $input, $public),
-            default => throw new InvalidArgumentException('Unsupported curve'),
-        };
     }
 
     public function name(): string
@@ -84,17 +85,22 @@ final class EdDSA implements SignatureAlgorithm
         return 'EdDSA';
     }
 
+    /**
+     * @throws InvalidArgumentException if the key type is not valid
+     * @throws InvalidArgumentException if a mandatory key parameter is missing
+     * @throws InvalidArgumentException if the curve is not suuported
+     */
     private function checkKey(JWK $key): void
     {
-        if (! in_array($key->get('kty'), $this->allowedKeyTypes(), true)) {
+        if (!in_array($key->get('kty'), $this->allowedKeyTypes(), true)) {
             throw new InvalidArgumentException('Wrong key type.');
         }
         foreach (['x', 'crv'] as $k) {
-            if (! $key->has($k)) {
+            if (!$key->has($k)) {
                 throw new InvalidArgumentException(sprintf('The key parameter "%s" is missing.', $k));
             }
         }
-        if ($key->get('crv') !== 'Ed25519') {
+        if ('Ed25519' !== $key->get('crv')) {
             throw new InvalidArgumentException('Unsupported curve.');
         }
     }

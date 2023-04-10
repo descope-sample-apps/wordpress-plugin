@@ -29,12 +29,12 @@ final class AttributeAutoconfigurationPass extends AbstractRecursivePass
 
     public function process(ContainerBuilder $container): void
     {
-        if (!$container->getAutoconfiguredAttributes()) {
+        if (80000 > \PHP_VERSION_ID || !$container->getAutoconfiguredAttributes()) {
             return;
         }
 
         foreach ($container->getAutoconfiguredAttributes() as $attributeName => $callable) {
-            $callableReflector = new \ReflectionFunction($callable(...));
+            $callableReflector = new \ReflectionFunction(\Closure::fromCallable($callable));
             if ($callableReflector->getNumberOfParameters() <= 2) {
                 $this->classAttributeConfigurators[$attributeName] = $callable;
                 continue;
@@ -55,7 +55,7 @@ final class AttributeAutoconfigurationPass extends AbstractRecursivePass
 
             try {
                 $attributeReflector = new \ReflectionClass($attributeName);
-            } catch (\ReflectionException) {
+            } catch (\ReflectionException $e) {
                 continue;
             }
 
@@ -78,7 +78,7 @@ final class AttributeAutoconfigurationPass extends AbstractRecursivePass
         parent::process($container);
     }
 
-    protected function processValue(mixed $value, bool $isRoot = false): mixed
+    protected function processValue($value, bool $isRoot = false)
     {
         if (!$value instanceof Definition
             || !$value->isAutoconfigured()
@@ -103,7 +103,7 @@ final class AttributeAutoconfigurationPass extends AbstractRecursivePass
         if ($this->parameterAttributeConfigurators) {
             try {
                 $constructorReflector = $this->getConstructor($value, false);
-            } catch (RuntimeException) {
+            } catch (RuntimeException $e) {
                 $constructorReflector = null;
             }
 

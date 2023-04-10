@@ -22,30 +22,38 @@ use Symfony\Component\DependencyInjection\Reference;
  */
 class RegisterReverseContainerPass implements CompilerPassInterface
 {
-    private bool $beforeRemoving;
+    private $beforeRemoving;
+    private $serviceId;
+    private $tagName;
 
-    public function __construct(bool $beforeRemoving)
+    public function __construct(bool $beforeRemoving, string $serviceId = 'reverse_container', string $tagName = 'container.reversible')
     {
+        if (1 < \func_num_args()) {
+            trigger_deprecation('symfony/dependency-injection', '5.3', 'Configuring "%s" is deprecated.', __CLASS__);
+        }
+
         $this->beforeRemoving = $beforeRemoving;
+        $this->serviceId = $serviceId;
+        $this->tagName = $tagName;
     }
 
     public function process(ContainerBuilder $container)
     {
-        if (!$container->hasDefinition('reverse_container')) {
+        if (!$container->hasDefinition($this->serviceId)) {
             return;
         }
 
         $refType = $this->beforeRemoving ? ContainerInterface::IGNORE_ON_UNINITIALIZED_REFERENCE : ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE;
         $services = [];
-        foreach ($container->findTaggedServiceIds('container.reversible') as $id => $tags) {
+        foreach ($container->findTaggedServiceIds($this->tagName) as $id => $tags) {
             $services[$id] = new Reference($id, $refType);
         }
 
         if ($this->beforeRemoving) {
             // prevent inlining of the reverse container
-            $services['reverse_container'] = new Reference('reverse_container', $refType);
+            $services[$this->serviceId] = new Reference($this->serviceId, $refType);
         }
-        $locator = $container->getDefinition('reverse_container')->getArgument(1);
+        $locator = $container->getDefinition($this->serviceId)->getArgument(1);
 
         if ($locator instanceof Reference) {
             $locator = $container->getDefinition((string) $locator);

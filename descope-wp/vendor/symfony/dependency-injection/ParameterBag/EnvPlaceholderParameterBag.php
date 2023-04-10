@@ -19,14 +19,17 @@ use Symfony\Component\DependencyInjection\Exception\RuntimeException;
  */
 class EnvPlaceholderParameterBag extends ParameterBag
 {
-    private string $envPlaceholderUniquePrefix;
-    private array $envPlaceholders = [];
-    private array $unusedEnvPlaceholders = [];
-    private array $providedTypes = [];
+    private $envPlaceholderUniquePrefix;
+    private $envPlaceholders = [];
+    private $unusedEnvPlaceholders = [];
+    private $providedTypes = [];
 
-    private static int $counter = 0;
+    private static $counter = 0;
 
-    public function get(string $name): array|bool|string|int|float|\UnitEnum|null
+    /**
+     * {@inheritdoc}
+     */
+    public function get(string $name)
     {
         if (str_starts_with($name, 'env(') && str_ends_with($name, ')') && 'env()' !== $name) {
             $env = substr($name, 4, -1);
@@ -41,7 +44,7 @@ class EnvPlaceholderParameterBag extends ParameterBag
                     return $placeholder; // return first result
                 }
             }
-            if (!preg_match('/^(?:[-.\w\\\\]*+:)*+\w++$/', $env)) {
+            if (!preg_match('/^(?:[-.\w]*+:)*+\w++$/', $env)) {
                 throw new InvalidArgumentException(sprintf('Invalid %s name: only "word" characters are allowed.', $name));
             }
             if ($this->has($name) && null !== ($defaultValue = parent::get($name)) && !\is_string($defaultValue)) {
@@ -49,7 +52,7 @@ class EnvPlaceholderParameterBag extends ParameterBag
             }
 
             $uniqueName = md5($name.'_'.self::$counter++);
-            $placeholder = sprintf('%s_%s_%s', $this->getEnvPlaceholderUniquePrefix(), strtr($env, ':-.\\', '____'), $uniqueName);
+            $placeholder = sprintf('%s_%s_%s', $this->getEnvPlaceholderUniquePrefix(), strtr($env, ':-.', '___'), $uniqueName);
             $this->envPlaceholders[$env][$placeholder] = $placeholder;
 
             return $placeholder;
@@ -63,7 +66,7 @@ class EnvPlaceholderParameterBag extends ParameterBag
      */
     public function getEnvPlaceholderUniquePrefix(): string
     {
-        if (!isset($this->envPlaceholderUniquePrefix)) {
+        if (null === $this->envPlaceholderUniquePrefix) {
             $reproducibleEntropy = unserialize(serialize($this->parameters));
             array_walk_recursive($reproducibleEntropy, function (&$v) { $v = null; });
             $this->envPlaceholderUniquePrefix = 'env_'.substr(md5(serialize($reproducibleEntropy)), -16);
@@ -77,7 +80,7 @@ class EnvPlaceholderParameterBag extends ParameterBag
      *
      * @return string[][] A map of env var names to their placeholders
      */
-    public function getEnvPlaceholders(): array
+    public function getEnvPlaceholders()
     {
         return $this->envPlaceholders;
     }
@@ -127,11 +130,14 @@ class EnvPlaceholderParameterBag extends ParameterBag
      *
      * @return string[][]
      */
-    public function getProvidedTypes(): array
+    public function getProvidedTypes()
     {
         return $this->providedTypes;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function resolve()
     {
         if ($this->resolved) {

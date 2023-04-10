@@ -18,7 +18,10 @@ namespace Symfony\Component\DependencyInjection\Loader;
  */
 class DirectoryLoader extends FileLoader
 {
-    public function load(mixed $file, string $type = null): mixed
+    /**
+     * {@inheritdoc}
+     */
+    public function load($file, string $type = null)
     {
         $file = rtrim($file, '/');
         $path = $this->locator->locate($file);
@@ -39,7 +42,10 @@ class DirectoryLoader extends FileLoader
         return null;
     }
 
-    public function supports(mixed $resource, string $type = null): bool
+    /**
+     * {@inheritdoc}
+     */
+    public function supports($resource, string $type = null)
     {
         if ('directory' === $type) {
             return true;

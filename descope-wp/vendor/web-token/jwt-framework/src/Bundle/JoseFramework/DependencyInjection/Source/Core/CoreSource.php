@@ -2,15 +2,19 @@
 
 declare(strict_types=1);
 
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2014-2020 Spomky-Labs
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the LICENSE file for details.
+ */
+
 namespace Jose\Bundle\JoseFramework\DependencyInjection\Source\Core;
 
 use Jose\Bundle\JoseFramework\DataCollector\Collector;
-use Jose\Bundle\JoseFramework\DependencyInjection\Compiler\AlgorithmCompilerPass;
-use Jose\Bundle\JoseFramework\DependencyInjection\Compiler\CheckerCollectorCompilerPass;
-use Jose\Bundle\JoseFramework\DependencyInjection\Compiler\DataCollectorCompilerPass;
-use Jose\Bundle\JoseFramework\DependencyInjection\Compiler\JWECollectorCompilerPass;
-use Jose\Bundle\JoseFramework\DependencyInjection\Compiler\JWSCollectorCompilerPass;
-use Jose\Bundle\JoseFramework\DependencyInjection\Compiler\KeyCollectorCompilerPass;
+use Jose\Bundle\JoseFramework\DependencyInjection\Compiler;
 use Jose\Bundle\JoseFramework\DependencyInjection\Source\SourceWithCompilerPasses;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\FileLocator;
@@ -28,14 +32,14 @@ class CoreSource implements SourceWithCompilerPasses
 
     public function load(array $config, ContainerBuilder $container): void
     {
-        $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../../../Resources/config'));
+        $loader = new PhpFileLoader($container, new FileLocator(__DIR__.'/../../../Resources/config'));
         $loader->load('services.php');
 
         if (interface_exists(EnvVarProcessorInterface::class)) {
             $loader->load('env_var.php');
         }
 
-        if ($container->getParameter('kernel.debug') === true) {
+        if (true === $container->getParameter('kernel.debug')) {
             $container->registerForAutoconfiguration(Collector::class)->addTag('jose.data_collector');
             $loader->load('dev_services.php');
         }
@@ -56,12 +60,12 @@ class CoreSource implements SourceWithCompilerPasses
     public function getCompilerPasses(): array
     {
         return [
-            new AlgorithmCompilerPass(),
-            new DataCollectorCompilerPass(),
-            new CheckerCollectorCompilerPass(),
-            new KeyCollectorCompilerPass(),
-            new JWSCollectorCompilerPass(),
-            new JWECollectorCompilerPass(),
+            new Compiler\AlgorithmCompilerPass(),
+            new Compiler\DataCollectorCompilerPass(),
+            new Compiler\CheckerCollectorCompilerPass(),
+            new Compiler\KeyCollectorCompilerPass(),
+            new Compiler\JWSCollectorCompilerPass(),
+            new Compiler\JWECollectorCompilerPass(),
         ];
     }
 }

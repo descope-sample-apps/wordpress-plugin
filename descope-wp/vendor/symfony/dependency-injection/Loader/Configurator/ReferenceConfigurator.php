@@ -19,10 +19,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ReferenceConfigurator extends AbstractConfigurator
 {
     /** @internal */
-    protected string $id;
+    protected $id;
 
     /** @internal */
-    protected int $invalidBehavior = ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE;
+    protected $invalidBehavior = ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE;
 
     public function __construct(string $id)
     {
@@ -32,7 +32,7 @@ class ReferenceConfigurator extends AbstractConfigurator
     /**
      * @return $this
      */
-    final public function ignoreOnInvalid(): static
+    final public function ignoreOnInvalid(): self
     {
         $this->invalidBehavior = ContainerInterface::IGNORE_ON_INVALID_REFERENCE;
 
@@ -42,7 +42,7 @@ class ReferenceConfigurator extends AbstractConfigurator
     /**
      * @return $this
      */
-    final public function nullOnInvalid(): static
+    final public function nullOnInvalid(): self
     {
         $this->invalidBehavior = ContainerInterface::NULL_ON_INVALID_REFERENCE;
 
@@ -52,14 +52,17 @@ class ReferenceConfigurator extends AbstractConfigurator
     /**
      * @return $this
      */
-    final public function ignoreOnUninitialized(): static
+    final public function ignoreOnUninitialized(): self
     {
         $this->invalidBehavior = ContainerInterface::IGNORE_ON_UNINITIALIZED_REFERENCE;
 
         return $this;
     }
 
-    public function __toString(): string
+    /**
+     * @return string
+     */
+    public function __toString()
     {
         return $this->id;
     }

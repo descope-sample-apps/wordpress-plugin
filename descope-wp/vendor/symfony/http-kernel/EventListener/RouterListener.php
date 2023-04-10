@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
+use Symfony\Component\HttpKernel\Event\FinishRequestEvent;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
@@ -41,20 +42,25 @@ use Symfony\Component\Routing\RequestContextAwareInterface;
  */
 class RouterListener implements EventSubscriberInterface
 {
-    private RequestMatcherInterface|UrlMatcherInterface $matcher;
-    private RequestContext $context;
-    private ?LoggerInterface $logger;
-    private RequestStack $requestStack;
-    private ?string $projectDir;
-    private bool $debug;
+    private $matcher;
+    private $context;
+    private $logger;
+    private $requestStack;
+    private $projectDir;
+    private $debug;
 
     /**
-     * @param RequestContext|null $context The RequestContext (can be null when $matcher implements RequestContextAwareInterface)
+     * @param UrlMatcherInterface|RequestMatcherInterface $matcher The Url or Request matcher
+     * @param RequestContext|null                         $context The RequestContext (can be null when $matcher implements RequestContextAwareInterface)
      *
      * @throws \InvalidArgumentException
      */
-    public function __construct(UrlMatcherInterface|RequestMatcherInterface $matcher, RequestStack $requestStack, RequestContext $context = null, LoggerInterface $logger = null, string $projectDir = null, bool $debug = true)
+    public function __construct($matcher, RequestStack $requestStack, RequestContext $context = null, LoggerInterface $logger = null, string $projectDir = null, bool $debug = true)
     {
+        if (!$matcher instanceof UrlMatcherInterface && !$matcher instanceof RequestMatcherInterface) {
+            throw new \InvalidArgumentException('Matcher must either implement UrlMatcherInterface or RequestMatcherInterface.');
+        }
+
         if (null === $context && !$matcher instanceof RequestContextAwareInterface) {
             throw new \InvalidArgumentException('You must either pass a RequestContext or the matcher must implement RequestContextAwareInterface.');
         }
@@ -67,7 +73,7 @@ class RouterListener implements EventSubscriberInterface
         $this->debug = $debug;
     }
 
-    private function setCurrentRequest(?Request $request)
+    private function setCurrentRequest(Request $request = null)
     {
         if (null !== $request) {
             try {
@@ -82,7 +88,7 @@ class RouterListener implements EventSubscriberInterface
      * After a sub-request is done, we need to reset the routing context to the parent request so that the URL generator
      * operates on the correct context again.
      */
-    public function onKernelFinishRequest()
+    public function onKernelFinishRequest(FinishRequestEvent $event)
     {
         $this->setCurrentRequest($this->requestStack->getParentRequest());
     }
@@ -107,12 +113,14 @@ class RouterListener implements EventSubscriberInterface
                 $parameters = $this->matcher->match($request->getPathInfo());
             }
 
-            $this->logger?->info('Matched route "{route}".', [
-                'route' => $parameters['_route'] ?? 'n/a',
-                'route_parameters' => $parameters,
-                'request_uri' => $request->getUri(),
-                'method' => $request->getMethod(),
-            ]);
+            if (null !== $this->logger) {
+                $this->logger->info('Matched route "{route}".', [
+                    'route' => $parameters['_route'] ?? 'n/a',
+                    'route_parameters' => $parameters,
+                    'request_uri' => $request->getUri(),
+                    'method' => $request->getMethod(),
+                ]);
+            }
 
             $request->attributes->add($parameters);
             unset($parameters['_route'], $parameters['_controller']);

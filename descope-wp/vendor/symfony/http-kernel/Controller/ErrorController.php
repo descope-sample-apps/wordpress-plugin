@@ -25,11 +25,11 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
  */
 class ErrorController
 {
-    private HttpKernelInterface $kernel;
-    private string|object|array|null $controller;
-    private ErrorRendererInterface $errorRenderer;
+    private $kernel;
+    private $controller;
+    private $errorRenderer;
 
-    public function __construct(HttpKernelInterface $kernel, string|object|array|null $controller, ErrorRendererInterface $errorRenderer)
+    public function __construct(HttpKernelInterface $kernel, $controller, ErrorRendererInterface $errorRenderer)
     {
         $this->kernel = $kernel;
         $this->controller = $controller;

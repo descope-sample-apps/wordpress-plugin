@@ -2,14 +2,22 @@
 
 declare(strict_types=1);
 
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2014-2020 Spomky-Labs
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the LICENSE file for details.
+ */
+
 namespace Jose\Component\Encryption\Algorithm\KeyEncryption;
 
+use Base64Url\Base64Url;
 use function in_array;
 use InvalidArgumentException;
 use function is_string;
 use Jose\Component\Core\JWK;
-use const OPENSSL_RAW_DATA;
-use ParagonIE\ConstantTime\Base64UrlSafe;
 use RuntimeException;
 
 abstract class AESCTR implements KeyEncryption
@@ -20,8 +28,7 @@ abstract class AESCTR implements KeyEncryption
     }
 
     /**
-     * @param array<string, mixed> $completeHeader
-     * @param array<string, mixed> $additionalHeader
+     * @throws RuntimeException if the CEK cannot be encrypted
      */
     public function encryptKey(JWK $key, string $cek, array $completeHeader, array &$additionalHeader): string
     {
@@ -29,10 +36,10 @@ abstract class AESCTR implements KeyEncryption
         $iv = random_bytes(16);
 
         // We set header parameters
-        $additionalHeader['iv'] = Base64UrlSafe::encodeUnpadded($iv);
+        $additionalHeader['iv'] = Base64Url::encode($iv);
 
         $result = openssl_encrypt($cek, $this->getMode(), $k, OPENSSL_RAW_DATA, $iv);
-        if ($result === false) {
+        if (false === $result) {
             throw new RuntimeException('Unable to encrypt the CEK');
         }
 
@@ -40,17 +47,16 @@ abstract class AESCTR implements KeyEncryption
     }
 
     /**
-     * @param array<string, mixed> $header
+     * @throws RuntimeException if the CEK cannot be decrypted
      */
     public function decryptKey(JWK $key, string $encrypted_cek, array $header): string
     {
         $k = $this->getKey($key);
-        isset($header['iv']) || throw new InvalidArgumentException('The header parameter "iv" is missing.');
-        is_string($header['iv']) || throw new InvalidArgumentException('The header parameter "iv" is not valid.');
-        $iv = Base64UrlSafe::decode($header['iv']);
+        $this->checkHeaderAdditionalParameters($header);
+        $iv = Base64Url::decode($header['iv']);
 
         $result = openssl_decrypt($encrypted_cek, $this->getMode(), $k, OPENSSL_RAW_DATA, $iv);
-        if ($result === false) {
+        if (false === $result) {
             throw new RuntimeException('Unable to decrypt the CEK');
         }
 
@@ -64,19 +70,35 @@ abstract class AESCTR implements KeyEncryption
 
     abstract protected function getMode(): string;
 
+    /**
+     * @throws InvalidArgumentException if the key is invalid
+     */
     private function getKey(JWK $key): string
     {
-        if (! in_array($key->get('kty'), $this->allowedKeyTypes(), true)) {
+        if (!in_array($key->get('kty'), $this->allowedKeyTypes(), true)) {
             throw new InvalidArgumentException('Wrong key type.');
         }
-        if (! $key->has('k')) {
+        if (!$key->has('k')) {
             throw new InvalidArgumentException('The key parameter "k" is missing.');
         }
         $k = $key->get('k');
-        if (! is_string($k)) {
+        if (!is_string($k)) {
             throw new InvalidArgumentException('The key parameter "k" is invalid.');
         }
 
-        return Base64UrlSafe::decode($k);
+        return Base64Url::decode($k);
+    }
+
+    /**
+     * @throws InvalidArgumentException if the IV is missing or invalid
+     */
+    private function checkHeaderAdditionalParameters(array $header): void
+    {
+        if (!isset($header['iv'])) {
+            throw new InvalidArgumentException('The header parameter "iv" is missing.');
+        }
+        if (!is_string($header['iv'])) {
+            throw new InvalidArgumentException('The header parameter "iv" is not valid.');
+        }
     }
 }
