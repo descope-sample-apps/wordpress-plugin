@@ -1,10 +1,8 @@
-![WordPress by Descope]
+# WordPress by Descope
 
-WordPress Plugin for [Descope](https://www.descope.com/) Authentication
+## WordPress Plugin for [Descope](https://www.descope.com/) Authentication
 
-[![License](https://raw.githubusercontent.com/descope/descope-js/main/LICENSE)](https://doge.mit-license.org/)
-
-:rocket: [Getting Started](#getting-started) - :computer: [SDK Usage](#sdk-usage) - 📆 [Support Policy](#support-policy) - :speech_balloon: [Feedback](#feedback)
+[![License](https://img.shields.io/packagist/l/auth0/auth0-php)](https://doge.mit-license.org/)
 
 ## Getting Started
 
