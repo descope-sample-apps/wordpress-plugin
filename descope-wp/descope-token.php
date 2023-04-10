@@ -19,4 +19,29 @@ $_SESSION["SESSION_TOKEN"] = $session_token;
 
 
 echo 'Session auth token:' . $_SESSION["SESSION_TOKEN"];
+
+$project_id = 'P2NvW0PnpogrAXjls7Y9btdMv9S3';
+$url = 'https://api.descope.com/v2/keys/' . $project_id;
+$client = new GuzzleHttp\Client();
+$res = $client->request('GET', $url);
+$jwk_keys = json_decode($res->getBody(), true);
+$jwk_set = JWKSet::createFromKeyData($jwk_keys);
+			
+$jwsVerifier = new JWSVerifier(
+  new AlgorithmManager([
+    new RS256(),
+  ])
+);
+
+$serializerManager = new JWSSerializerManager([
+	new CompactSerializer(),
+]);
+
+$jws = $serializerManager->unserialize($session);
+
+$isVerified = $jwsVerifier->verifyWithKeySet($jws, $jwk_set, 0);
+if (!$isVerified) {
+  session_destroy();
+	// return $jws->getPayload();
+}
 ?>
