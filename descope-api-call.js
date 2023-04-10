@@ -26,7 +26,6 @@ function createToken(userDetails, sessionToken, refreshToken, id, redirectURL) {
   formData.append("userId", userDetails.userId);
   formData.append("userName", userDetails.name);
   formData.append("sessionToken", sessionToken);
-  formData.append("refreshToken", refreshToken);
   formData.append("idDescope", id);
 
   var xmlHttp = new XMLHttpRequest();
