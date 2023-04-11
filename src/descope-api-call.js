@@ -1,11 +1,8 @@
 const wcElement = document.getElementsByTagName("descope-wc")[0];
 
 const onSuccess = (e) => {
-  // console.log("userdetails", e);
   const sessionToken = e.detail.sessionJwt;
   const refreshToken = e.detail.refreshJwt;
-  // console.log("sessionToken", sessionToken);
-  // console.log("refreshToken", refreshToken);
 
   createToken(
     e?.detail?.user,

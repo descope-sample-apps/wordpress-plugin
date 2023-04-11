@@ -26,11 +26,8 @@
   // Code to set cookie
   // setcookie('user_name', $user_name, time() + (86400 * 30), '/');
 
-
-  // Fetch JWK public key from Descope API
-
   //TODO: get project ID from database. - DONE
-
+  // Fetch JWK public key from Descope API
   $url = 'https://api.descope.com/v2/keys/' . $project_id;
   $client = new GuzzleHttp\Client();
   $res = $client->request('GET', $url);
@@ -66,9 +63,13 @@
     $_SESSION["AUTH_ID"] = $user_id;
     $_SESSION["AUTH_NAME"] = $user_name;
     $_SESSION["SESSION_TOKEN"] = $session_token;
-    //TODO: Add expiry to the session. 
+    //TODO: Add expiry to the session. - DONE
+    // exp comes as a UNIX timestamp
+    $_SESSION["SESSION_EXPIRY"] = json_decode($jws->getPayload(), true)["exp"];
     $_SESSION["REFRESH_TOKEN"] = $refresh_token;
+    // Rexp comes as a Date string
+    $_SESSION["REFRESH_EXPIRY"] = strtotime(json_decode($jws->getPayload(), true)["rexp"]);
     //TODO: return ok. - DONE
-    echo 'Okay';
+    echo 'Successful Login';
   }
 ?>
