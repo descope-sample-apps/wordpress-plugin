@@ -105,9 +105,6 @@ function descope_wc_shortcode($atts)
 
     $var_dc = $projectID;
     $html = '<descope-wc id=' . $id . ' project-id=' . $projectID . ' flow-id=' . $flowId . ' redirect_url=' . $redirectUrl . '></descope-wc>';
-    $html .= "<script>";
-    $html .= 'const sdk = Descope({ projectId: ' . $projectID . ', persistTokens: true, autoRefresh: true });';
-    $html .= "</script>";
     // Return the HTML
     return $html;
 
@@ -118,6 +115,7 @@ add_shortcode('descope-wc', 'descope_wc_shortcode');
 
 function descope_session_shortcode($atts, $content = null)
 {
+    // TODO: Should this be where we start the session? 
     session_start();
     /**
      */
@@ -136,6 +134,11 @@ function descope_session_shortcode($atts, $content = null)
         exit;
 
     }
+    else {
+        // TODO: Validate the session token for validity
+        // TODO: If not valid, refresh with session token with refresh token
+        // TODO: If valid, then continue. 
+    }
 
 
 
@@ -149,7 +152,7 @@ function descope_plugin_add_menu_item()
     add_menu_page(
         'Descope-plugin',
         // Page title
-        'Descope Auth',
+        'Descope Config',
         // Menu title
         'manage_options',
         // Capability required to access this page

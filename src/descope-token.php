@@ -19,6 +19,7 @@ session_start();
 $user_id = $_POST["userId"];
 $user_name = $_POST["userName"];
 $session_token = $_POST["sessionToken"];
+$refresh_token = $_POST["refreshToken"];
 $id = $_POST["idDescope"];
 
 // Fetch JWK public key from Descope API
@@ -58,6 +59,7 @@ if (!$isVerified) {
   $_SESSION["AUTH_ID"] = $user_id;
   $_SESSION["AUTH_NAME"] = $user_name;
   $_SESSION["SESSION_TOKEN"] = $session_token;
+  $_SESSION["REFRESH_TOKEN"] = $refresh_token;
   
   echo 'Session Token: ' . $_SESSION["SESSION_TOKEN"];
 }

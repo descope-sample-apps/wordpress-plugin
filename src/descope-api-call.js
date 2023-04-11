@@ -6,8 +6,7 @@ const onSuccess = (e) => {
   const refreshToken = e.detail.refreshJwt;
   // console.log("sessionToken", sessionToken);
   // console.log("refreshToken", refreshToken);
-  sdk.refresh();
-
+  
   createToken(
     e?.detail?.user,
     sessionToken,
@@ -27,6 +26,7 @@ function createToken(userDetails, sessionToken, refreshToken, id, redirectURL) {
   formData.append("userId", userDetails.userId);
   formData.append("userName", userDetails.name);
   formData.append("sessionToken", sessionToken);
+  formData.append("refreshToken", refreshToken);
   formData.append("idDescope", id);
 
   var xmlHttp = new XMLHttpRequest();
