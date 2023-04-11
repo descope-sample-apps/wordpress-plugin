@@ -40,11 +40,11 @@ function my_plugin_activate()
     $charset_collate = $wpdb->get_charset_collate();
 
     // SQL query to create table
+    // TODO: Mayur, please change to login_page_url - DONE
     $sql = "CREATE TABLE IF NOT EXISTS $table_name (
         id INT(11) NOT NULL AUTO_INCREMENT,
         project_id VARCHAR(255) NOT NULL,
-        // TODO: Mayur, please change to login_page_url
-        session_redirect_url VARCHAR(255) NULL,
+        login_page_url VARCHAR(255) NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY  (id)
@@ -125,19 +125,24 @@ function descope_session_shortcode($atts, $content = null)
         //TODO: If there is an refresh token on the cookie. 
         //TODO: cookie name is DSR. 
 
+        //TODO: we can set/unset COOKIE
+        // if (isset($_COOKIE['user_name'])) {
+        //     unset($_COOKIE['user_name']);
+        //     setcookie('user_name', '', time() - 3600, '/'); // empty value and old timestamp
+        // }
+
         global $wp, $wpdb;
         // $page_id = $wpdb->get_var('SELECT post_name FROM ' . $wpdb->prefix . 'posts WHERE post_content LIKE "%[descope-wc%"');
         $table_name = $wpdb->prefix . 'descope'; // adding default prefix to table name
-        $session_redirect_url = $wpdb->get_var("SELECT session_redirect_url FROM $table_name");
-        $pageUrl = $base_url . '/' . $session_redirect_url;
+        $login_page_url = $wpdb->get_var("SELECT login_page_url FROM $table_name");
+        $pageUrl = $base_url . '/' . $login_page_url;
 
 
         // $_SESSION['REDIRECTED'] = true;
         header("Location: " . $pageUrl);
         exit;
 
-    }
-    else {
+    } else {
         //TODO: check the expiry date from _session
         // TODO: If expired, refresh with session token with refresh token
         // TODO: If not expired, then continue. 
@@ -179,7 +184,7 @@ function descope_plugin_display_page()
         if (isset($_POST['submit'])) {
             // Sanitize input fields
             $new_project_id = isset($_POST['descope_input']) ? sanitize_text_field($_POST['descope_input']) : '';
-            $new_redirect_url = isset($_POST['session_redirect_url']) ? sanitize_text_field($_POST['session_redirect_url']) : '';
+            $new_redirect_url = isset($_POST['login_page_url']) ? sanitize_text_field($_POST['login_page_url']) : '';
 
             global $wpdb;
             $table_name = $wpdb->prefix . 'descope'; // adding default prefix to table name
@@ -191,7 +196,7 @@ function descope_plugin_display_page()
                 // An existing row is found, update both fields
                 $wpdb->update(
                     $table_name,
-                    array('project_id' => $new_project_id, 'session_redirect_url' => $new_redirect_url),
+                    array('project_id' => $new_project_id, 'login_page_url' => $new_redirect_url),
                     array('id' => $existing_row->id),
                     array('%s', '%s'),
                     array('%d')
@@ -202,7 +207,7 @@ function descope_plugin_display_page()
 
                 $wpdb->insert(
                     $table_name,
-                    array('project_id' => $new_project_id, 'session_redirect_url' => $new_redirect_url),
+                    array('project_id' => $new_project_id, 'login_page_url' => $new_redirect_url),
                     array('%s', '%s')
                 );
             }
@@ -212,7 +217,7 @@ function descope_plugin_display_page()
         global $wpdb;
         $table_name = $wpdb->prefix . 'descope'; // adding default prefix to table name
         $project_id = $wpdb->get_var("SELECT project_id FROM $table_name");
-        $session_redirect_url = $wpdb->get_var("SELECT session_redirect_url FROM $table_name");
+        $login_page_url = $wpdb->get_var("SELECT login_page_url FROM $table_name");
         ?>
 
         <head>
@@ -244,8 +249,8 @@ function descope_plugin_display_page()
                     value="<?php echo $project_id; ?>"><br /><br />
                 <!-- Input box for redirect url if session token does not exist -->
                 <label for="descope_input">Enter redirect url if session token does not exist:</label>
-                <input type="text" id="session_redirect_url" name="session_redirect_url" onkeyup="validateInput()"
-                    value="<?php echo $session_redirect_url; ?>"><br /><br /><br />
+                <input type="text" id="login_page_url" name="login_page_url" onkeyup="validateInput()"
+                    value="<?php echo $login_page_url; ?>"><br /><br /><br />
                 <input class="projectid-but" type="submit" id="submit-btn" name="submit" value="Submit" disabled>
             </div>
         </form>
@@ -254,7 +259,7 @@ function descope_plugin_display_page()
         // Function to enable the button only when input length of both the input boxes is greater than 0
         function validateInput() {
             var descopeInput = document.getElementById('descope_input');
-            var sessionRedirectUrlInput = document.getElementById('session_redirect_url');
+            var sessionRedirectUrlInput = document.getElementById('login_page_url');
             var submitBtn = document.getElementById('submit-btn');
             if (descopeInput.value.length > 0 && sessionRedirectUrlInput.value.length > 0) {
                 submitBtn.disabled = false;
