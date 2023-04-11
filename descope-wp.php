@@ -30,18 +30,15 @@ defined('ABSPATH') or die('You cannot access this plugin');
 // Activation hook
 register_activation_hook(__FILE__, 'my_plugin_activate');
 
-// Main DB variable and table name
-global $wp_db;
-$table_name = $wp_db->prefix . 'descope';
-
 
 function my_plugin_activate()
 {
     session_start();
-    
+    global $wpdb;
+
     // Create table when the plugin activates
-    $table_name = $wp_db->prefix . 'descope';
-    $charset_collate = $wp_db->get_charset_collate();
+    $table_name = $wpdb->prefix . 'descope';
+    $charset_collate = $wpdb->get_charset_collate();
 
     // SQL query to create table
     $sql = "CREATE TABLE IF NOT EXISTS $table_name (
@@ -63,11 +60,12 @@ register_deactivation_hook(__FILE__, 'my_plugin_deactivate');
 function my_plugin_deactivate()
 {
     session_destroy();
-    $table_name = $wp_db->prefix . 'descope'; // adding default prefix to table name
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'descope'; // adding default prefix to table name
 
     // SQL query to drop table
     $query = "DROP TABLE IF EXISTS $table_name;";
-    $wp_db->query($query);
+    $wpdb->query($query);
 }
 
 
@@ -81,8 +79,9 @@ add_action('wp_enqueue_scripts', 'enqueue_descope_scripts');
 
 
 function descope_wc_shortcode($atts)
-{
-    $table_name = $wp_db->prefix . 'descope';
+{   
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'descope';
 
     // Extract the redirect url, flow ID, and html tag id from the shortcode attributes
     $flowId = $atts['flow_id'];
@@ -90,7 +89,7 @@ function descope_wc_shortcode($atts)
     $redirectUrl = $atts['redirect_url'];
 
     // Extract projectId from table
-    $projectID = $wp_db->get_var("SELECT project_id FROM $table_name WHERE id = 1");
+    $projectID = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
 
     // Return html
     $html = '<descope-wc id=' . $id . ' project-id=' . $projectID . ' flow-id=' . $flowId . ' redirect_url=' . $redirectUrl . '></descope-wc>';
@@ -106,16 +105,22 @@ function descope_session_shortcode($atts, $content = null)
     $base_url = get_site_url();
     // If session_token info is present
     if (!isset($_SESSION['SESSION_TOKEN'])) {
+        echo "No session token present";
         // If DSR cookie is set
         if (isset($_COOKIE['DSR']) && refresh_token($_COOKIE['DSR'])) {
-            // We're good
+            echo "Session token was successfully refreshed, with DSR cookie";
         } else {
+            echo "DSR Cookie was not set or refresh failed";
             logout_redirect();
         }
     } else {
+        echo "Session token present";
+        // If session_token expiry is in the future
+        if (isset($_SESSION['SESSION_EXPIRY']) && time() < $_SESSION['SESSION_EXPIRY']) {
+            echo "Session was not expired so we're good";
         // If refresh_token is present, attempt refresh with refresh_token
-        if (isset($_SESSION['REFRESH_TOKEN']) && refresh_token($_SESSION['REFRESH_TOKEN'])) {
-            // We're good
+        } else if (isset($_SESSION['REFRESH_TOKEN']) && refresh_token($_SESSION['REFRESH_TOKEN'])) {
+            echo "Session token was successfully refreshed";
         } else {
             login_redirect();
         }
@@ -127,8 +132,11 @@ add_shortcode('descope-session', 'descope_session_shortcode');
 function refresh_token($refresh_token) 
 {
     // Attempt to refresh the session token, with the refresh_token
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'descope';
+
     $client = new GuzzleHttp\Client();
-    $projectId = $wp_db->get_var("SELECT project_id FROM $table_name WHERE id = 1");
+    $projectId = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
     $auth_token = $projectId . ':' . $refresh_token;
     $res = $client->request(
         'POST',
@@ -150,30 +158,6 @@ function refresh_token($refresh_token)
     return false;
 }
 
-function validate_signature($session_token) 
-{   
-    $url = 'https://api.descope.com/v2/keys/' . $project_id;
-    $client = new GuzzleHttp\Client();
-    $res = $client->request('GET', $url);
-    $jwk_keys = json_decode($res->getBody(), true);
-
-    // Perform Validation Logic for Signature
-    $jwk_set = JWKSet::createFromKeyData($jwk_keys);
-
-    $jwsVerifier = new JWSVerifier(
-        new AlgorithmManager([
-            new RS256(),
-        ])
-    );
-
-    $serializerManager = new JWSSerializerManager([
-        new CompactSerializer(),
-    ]);
-
-    $jws = $serializerManager->unserialize($session_token);
-    return $jwsVerifier->verifyWithKeySet($jws, $jwk_set, 0);
-}
-
 function logout_redirect() 
 {
     session_destroy();
@@ -182,8 +166,11 @@ function logout_redirect()
     unset($_COOKIE['DSR']);
     setcookie('user_name', '', time() - 3600, '/');
 
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'descope';
+
     // Get redirect URL from DB
-    $login_page_url = $wp_db->get_var("SELECT login_page_url FROM $table_name");
+    $login_page_url = $wpdb->get_var("SELECT login_page_url FROM $table_name");
     $base_url = get_site_url();
     $pageUrl = $base_url . '/' . $login_page_url;
     header("location:" . $pageUrl);
@@ -193,9 +180,9 @@ function logout_redirect()
 // function get_db_info()
 // {   
 //     // Get all attributes from DB
-//     $table_name = $wp_db->prefix . 'descope';
-//     $project_id = $wp_db->get_var("SELECT project_id FROM $table_name");
-//     $login_page_url = $wp_db->get_var("SELECT login_page_url FROM $table_name");
+//     $table_name = $wpdb->prefix . 'descope';
+//     $project_id = $wpdb->get_var("SELECT project_id FROM $table_name");
+//     $login_page_url = $wpdb->get_var("SELECT login_page_url FROM $table_name");
     
 //     // Return JSON of DB information
 //     $db_info = array('table_name' => $table_name, 'project_id' => $project_id, 'login_page_url' => $login_page_url);
@@ -233,14 +220,15 @@ function descope_plugin_display_page()
             $new_project_id = isset($_POST['descope_input']) ? sanitize_text_field($_POST['descope_input']) : '';
             $new_redirect_url = isset($_POST['login_page_url']) ? sanitize_text_field($_POST['login_page_url']) : '';
 
-            $table_name = $wp_db->prefix . 'descope'; // adding default prefix to table name
+            global $wpdb;
+            $table_name = $wpdb->prefix . 'descope';
             
             // Check if there is an existing row in the table
-            $existing_row = $wp_db->get_row("SELECT * FROM $table_name LIMIT 1");
+            $existing_row = $wpdb->get_row("SELECT * FROM $table_name LIMIT 1");
 
             if ($existing_row !== null) {
                 // An existing row is found, update both fields
-                $wp_db->update(
+                $wpdb->update(
                     $table_name,
                     array('project_id' => $new_project_id, 'login_page_url' => $new_redirect_url),
                     array('id' => $existing_row->id),
@@ -249,9 +237,9 @@ function descope_plugin_display_page()
                 );
             } else {
                 // No existing row found, insert a new row
-                $wp_db->query("ALTER TABLE {$wp_db->prefix}descope AUTO_INCREMENT = 1");
+                $wpdb->query("ALTER TABLE {$wpdb->prefix}descope AUTO_INCREMENT = 1");
 
-                $wp_db->insert(
+                $wpdb->insert(
                     $table_name,
                     array('project_id' => $new_project_id, 'login_page_url' => $new_redirect_url),
                     array('%s', '%s')
@@ -259,10 +247,11 @@ function descope_plugin_display_page()
             }
         }
 
+        global $wpdb;
         // Query to get info from DB
-        $table_name = $wp_db->prefix . 'descope';
-        $project_id = $wp_db->get_var("SELECT project_id FROM $table_name");
-        $login_page_url = $wp_db->get_var("SELECT login_page_url FROM $table_name");
+        $table_name = $wpdb->prefix . 'descope';
+        $project_id = $wpdb->get_var("SELECT project_id FROM $table_name");
+        $login_page_url = $wpdb->get_var("SELECT login_page_url FROM $table_name");
         
         ?>
 

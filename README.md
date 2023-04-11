@@ -16,7 +16,7 @@
 
 Installation is very straight-forward. Since the app uses Composer to manage the packages, it will handle the entire build process for you.
 
-Either search for the Descope plugin in the Wordpress Plugin Store, or zip up this entire repo and then import it into Wordpress on your Wordpress Dashboard. You can follow the instructions [here](https://www.wpbeginner.com/beginners-guide/step-by-step-guide-to-install-a-wordpress-plugin-for-beginners/).
+Either search for the Descope plugin in the WordPress Plugin Store, or zip up this entire repo and then import it into WordPress on your WordPress Dashboard. You can follow the instructions [here](https://www.wpbeginner.com/beginners-guide/step-by-step-guide-to-install-a-wordpress-plugin-for-beginners/).
 
 ### Activation
 
