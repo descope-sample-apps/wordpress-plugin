@@ -23,6 +23,9 @@ $refresh_token = $_POST["refreshToken"];
 $id = $_POST["idDescope"];
 
 // Fetch JWK public key from Descope API
+
+//TODO: get project ID from database. 
+
 $project_id = 'P2NvW0PnpogrAXjls7Y9btdMv9S3';
 $url = 'https://api.descope.com/v2/keys/' . $project_id;
 $client = new GuzzleHttp\Client();
@@ -59,8 +62,9 @@ if (!$isVerified) {
   $_SESSION["AUTH_ID"] = $user_id;
   $_SESSION["AUTH_NAME"] = $user_name;
   $_SESSION["SESSION_TOKEN"] = $session_token;
+  //TODO: Add expiry to the session. 
   $_SESSION["REFRESH_TOKEN"] = $refresh_token;
-  
+  //TODO: return ok. 
   echo 'Session Token: ' . $_SESSION["SESSION_TOKEN"];
 }
 ?>

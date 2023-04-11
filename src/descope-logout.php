@@ -1,5 +1,8 @@
 <?php
 session_start();
+//TODO: Remove userID and username. 
+// TODO: remove the DSR cookie
+
 $_SESSION["SESSION_TOKEN"] = null;
 session_destroy();
 global $wp, $wpdb;

@@ -7,6 +7,7 @@
 
 
 /**
+ * * TODO: REview this. 
  * Plugin Name: Login by Descope
  * Description: Onboard your users like it’s 2023. Add passwordless authentication and user management to your app with a few lines of code. Choose from our drag-and-drop workflows, SDKs, or APIs.
  * Version: 1.0
@@ -33,7 +34,6 @@ register_activation_hook(__FILE__, 'my_plugin_activate');
 function my_plugin_activate()
 {
     session_start();
-    $_SESSION['ISLOGIN'] = true;
     // Create table when the plugin activates
     global $wpdb;
     $table_name = $wpdb->prefix . 'descope'; // adding default prefix to table name
@@ -43,6 +43,7 @@ function my_plugin_activate()
     $sql = "CREATE TABLE IF NOT EXISTS $table_name (
         id INT(11) NOT NULL AUTO_INCREMENT,
         project_id VARCHAR(255) NOT NULL,
+        // TODO: Mayur, please change to login_page_url
         session_redirect_url VARCHAR(255) NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -62,7 +63,6 @@ register_deactivation_hook(__FILE__, 'my_plugin_deactivate');
 
 function my_plugin_deactivate()
 {
-    $_SESSION['ISLOGIN'] = false;
     session_destroy();
 
     global $wpdb;
@@ -122,6 +122,9 @@ function descope_session_shortcode($atts, $content = null)
     // $_SESSION['SESSION_TOKEN'] = null;
     $base_url = get_site_url();
     if (!isset($_SESSION['SESSION_TOKEN'])) {
+        //TODO: If there is an refresh token on the cookie. 
+        //TODO: cookie name is DSR. 
+
         global $wp, $wpdb;
         // $page_id = $wpdb->get_var('SELECT post_name FROM ' . $wpdb->prefix . 'posts WHERE post_content LIKE "%[descope-wc%"');
         $table_name = $wpdb->prefix . 'descope'; // adding default prefix to table name
@@ -135,9 +138,9 @@ function descope_session_shortcode($atts, $content = null)
 
     }
     else {
-        // TODO: Validate the session token for validity
-        // TODO: If not valid, refresh with session token with refresh token
-        // TODO: If valid, then continue. 
+        //TODO: check the expiry date from _session
+        // TODO: If expired, refresh with session token with refresh token
+        // TODO: If not expired, then continue. 
     }
 
 
@@ -170,7 +173,7 @@ function descope_plugin_display_page()
 {
     ?>
     <div class="wrap">
-        <h1>Descope Auth</h1>
+        <h1>Descope Configuration</h1>
         <?php
         // Query after the input values are submitted
         if (isset($_POST['submit'])) {
