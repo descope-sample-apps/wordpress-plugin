@@ -1,6 +1,6 @@
 <?php
 
-require '/vendor/autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Request;
