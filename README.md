@@ -37,3 +37,12 @@ To add the Descope flow page to your website, just add the tag `[descope-wc id="
 1. The **id** is the HTML component tag for the Descope login flows screen.
 2. The **redirect_url** is where you would like Descope to redirect the client, after the login is **successful**.
 3. The **flow_id** is the id of the Descope flow that you want to implement in your page. You can edit your flows [here](https://app.descope.com/flows), as well as fetch its ID.
+
+### Protecting Pages
+
+The last step to adding Descope authentication to any of your website pages, is to add the session tag to the top of each page.
+Simply add the tag `[descope-session]` to the top of the body in any of the pages you wish to require authentication for, and Descope will require authentication for any user that visits the page.
+
+And you're done! You can refer to the step-by-step installation/usage tutorial [here]() if you are having trouble with any of the installation steps.
+
+If you have any questions about Descope, feel free to [reach out](https://docs.descope.com/support/)!
