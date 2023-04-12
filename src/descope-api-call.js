@@ -1,9 +1,7 @@
-
 function createToken(
   userDetails,
   sessionToken,
   refreshToken,
-  id,
   redirectURL,
   projectId
 ) {
@@ -12,7 +10,7 @@ function createToken(
   formData.append("userName", userDetails.name);
   formData.append("sessionToken", sessionToken);
   formData.append("refreshToken", refreshToken);
-  formData.append("idDescope", id);
+  // formData.append("idDescope", id);
   formData.append("projectId", projectId);
 
   var xmlHttp = new XMLHttpRequest();
@@ -21,7 +19,7 @@ function createToken(
 
   xmlHttp.onreadystatechange = function () {
     if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
-      console.log("Response", xmlHttp.responseText);
+      // console.log("Response", xmlHttp.responseText);
       window.location = `${baseUrl}/${redirectURL}`;
     }
   };
@@ -32,28 +30,14 @@ function createToken(
   xmlHttp.send(formData);
 }
 
-async function show_or_hide_flow() {
-  const sessionToken = sdk.getSessionToken();
-  const refreshToken = sdk.getRefreshToken();
-  const notValidToken = sdk.isJwtExpired(sessionToken);
-  if (sessionToken && !notValidToken) {
-    const user = await sdk.me();
-    const e = document.getElementsByTagName("descope-wc")[0];
-    createToken(user.data, sessionToken, refreshToken, e.id, e.getAttribute("redirect_url"), e.getAttribute("project-id"));
-  }
-}
-
-const wcElement = document.getElementsByTagName("descope-wc")[0];
-
 const onSuccess = (e) => {
   const sessionToken = e.detail.sessionJwt;
   const refreshToken = e.detail.refreshJwt;
-  sdk.refresh();
+  // sdk.refresh();
   createToken(
     e?.detail?.user,
     sessionToken,
     refreshToken,
-    e.target.id,
     e.target.getAttribute("redirect_url"),
     e.target.getAttribute("project-id")
   );
@@ -61,9 +45,27 @@ const onSuccess = (e) => {
 
 const onError = (err) => console.log(err);
 
-if (wcElement) {
-  wcElement.addEventListener("success", onSuccess);
-  wcElement.addEventListener("error", onError);
+
+
+async function inject_flow(projectId, flowId, redirectUrl) {
+  const sdk = Descope({ projectId:projectId, persistTokens: true, autoRefresh: true });
+  const sessionToken = sdk.getSessionToken();
+  const refreshToken = sdk.getRefreshToken();
+  const notValidToken = sessionToken && sdk.isJwtExpired(sessionToken);
+  if (sessionToken && !notValidToken) {
+    const user = await sdk.me();
+    createToken(user.data, sessionToken, refreshToken, redirectUrl, projectId);
+  }
+  else {
+    const e = document.getElementById("descope_flow_div");
+    e.innerHTML = `<descope-wc project-id=${projectId} flow-id=${flowId} redirect_url=${redirectUrl}></descope-wc>`;
+    const wcElement = document.getElementsByTagName("descope-wc")[0];
+    if (wcElement) {
+      wcElement.addEventListener("success", onSuccess);
+      wcElement.addEventListener("error", onError);
+    }
+  }
 }
 
-show_or_hide_flow()
+
+
