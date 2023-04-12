@@ -1,4 +1,4 @@
-# WordPress by Descope
+# <a title="WordPress, GPL &lt;http://www.gnu.org/licenses/gpl.html&gt;, via Wikimedia Commons" href="https://wordpress.org/"><img width="64" alt="WordPress blue logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/WordPress_blue_logo.svg/64px-WordPress_blue_logo.svg.png"></a> by Descope
 
 ## WordPress Plugin for [Descope](https://www.descope.com/) Authentication
 
@@ -23,12 +23,12 @@ Either search for the Descope plugin in the WordPress Plugin Store, or zip up th
 After installation, you must activate the plugin within your WordPress site:
 
 1. Open your WordPress Dashboard.
-2. Select 'Plugins' from the sidebar, and then 'Installed Plugins.'
-3. Choose 'Activate' underneath the plugin's name.
+2. Select **Plugins** from the sidebar, and then **Installed Plugins.**
+3. Choose **Activate** underneath the plugin's name.
 
 ### Configure Descope
 
-Once you have installed and activated your plugin, you must go to the new `Descope Auth` menu in the left-hand sidebar and input your Descope Project ID and redirect URL for if the login is **unsuccessful**.
+Once you have installed and activated your plugin, you must go to the new `Descope Config` menu in the left-hand sidebar and input your Descope Project ID and redirect URL for if the login is **unsuccessful**.
 
 ### Add Descope Flows to your WP Pages
 
