@@ -93,6 +93,58 @@ function descope_wc_shortcode($atts)
 }
 add_shortcode('descope-wc', 'descope_wc_shortcode');
 
+function descope_wc_pre_post_update($post_ID, $data)
+{
+    // Check if the post contains the descope-wc shortcode
+    $post_content = $data['post_content'];
+    if (strpos($post_content, '[descope-wc') !== false) {
+        // Extract the shortcode attributes
+        $shortcode_attributes = shortcode_parse_atts($post_content);
+
+        // Extract the project_id and flow_id from the shortcode attributes
+        global $wpdb;
+
+        $table_name = $wpdb->prefix . 'descope'; // adding default prefix to table name
+        // Storing the value
+        $project_id = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
+        $id = $shortcode_attributes['id'];
+        $redirectUrl = $shortcode_attributes['redirect_url'];
+        $flow_id = $shortcode_attributes['flow_id'];
+
+        // Check if project ID  are set
+        if (empty($project_id)) {
+            $error_message = 'Please enter project id and redirect URL under "Descope Config" from navigation panel.';
+            add_action('admin_notices', function () use ($error_message) {
+                echo '<div class="error"><p>' . $error_message . '</p></div>';
+            });
+            wp_die(__($error_message));
+        }
+
+        // Check if id, flow ID, and redirect URL are set
+        if (empty($id) || empty($flow_id) || empty($redirectUrl)) {
+            $missing_attributes = array();
+
+            if (empty($id)) {
+                $missing_attributes[] = 'id';
+            }
+            if (empty($flow_id)) {
+                $missing_attributes[] = 'flow_id';
+            }
+            if (empty($redirectUrl)) {
+                $missing_attributes[] = 'redirect_url';
+            }
+
+            $error_message = 'Please enter the following attributes in the "descope-wc" shortcode: ' . implode(', ', $missing_attributes) . '.';
+            add_action('admin_notices', function () use ($error_message) {
+                echo '<div class="error"><p>' . $error_message . '</p></div>';
+            });
+            wp_die(__($error_message));
+            
+        }
+    }
+}
+
+add_action('pre_post_update', 'descope_wc_pre_post_update', 10, 2);
 
 function descope_session_shortcode($atts, $content = null)
 {
