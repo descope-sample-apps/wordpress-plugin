@@ -37,8 +37,7 @@ function createToken(
 
   var xmlHttp = new XMLHttpRequest();
   let getUrl = window.location;
-  let baseUrl =
-    getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split("/")[1];
+  let baseUrl = getUrl.protocol + "//" + getUrl.host;
 
   xmlHttp.onreadystatechange = function () {
     if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
@@ -48,7 +47,7 @@ function createToken(
   };
   xmlHttp.open(
     "post",
-    `${baseUrl}/wp-content/plugins/descope-wp/src/descope-token.php`
+    `${baseUrl}/wp-content/plugins/wordpress-plugin/src/descope-token.php`
   );
   xmlHttp.send(formData);
 }
