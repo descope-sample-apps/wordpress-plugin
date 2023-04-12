@@ -28,7 +28,10 @@ After installation, you must activate the plugin within your WordPress site:
 
 ### Configuring Descope
 
-Once you have installed and activated your plugin, you must go to the new `Descope Config` menu in the left-hand sidebar and input your Descope Project ID and redirect URL for if the login is **unsuccessful**.
+Once you have installed and activated your plugin, you must go to the new `Descope Config` menu in the left-hand sidebar and input the following:
+
+1. `Project ID` - this is your Descope Project ID you can get from the settings page [here](https://app.descope.com/settings/project).
+2. `Redirect URL` - redirect URL if the login is **unsuccessful**.
 
 ---
 
