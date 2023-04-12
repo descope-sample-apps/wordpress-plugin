@@ -1,23 +1,3 @@
-const wcElement = document.getElementsByTagName("descope-wc")[0];
-
-const onSuccess = (e) => {
-  const sessionToken = e.detail.sessionJwt;
-  const refreshToken = e.detail.refreshJwt;
-
-  createToken(
-    e?.detail?.user,
-    sessionToken,
-    refreshToken,
-    e.target.id,
-    e.target.getAttribute("redirect_url"),
-    e.target.getAttribute("project-id")
-  );
-};
-
-const onError = (err) => console.log(err);
-
-wcElement.addEventListener("success", onSuccess);
-wcElement.addEventListener("error", onError);
 
 function createToken(
   userDetails,
@@ -51,3 +31,39 @@ function createToken(
   );
   xmlHttp.send(formData);
 }
+
+async function show_or_hide_flow() {
+  const sessionToken = sdk.getSessionToken();
+  const refreshToken = sdk.getRefreshToken();
+  const notValidToken = sdk.isJwtExpired(sessionToken);
+  if (sessionToken && !notValidToken) {
+    const user = await sdk.me();
+    const e = document.getElementsByTagName("descope-wc")[0];
+    createToken(user.data, sessionToken, refreshToken, e.id, e.getAttribute("redirect_url"), e.getAttribute("project-id"));
+  }
+}
+
+const wcElement = document.getElementsByTagName("descope-wc")[0];
+
+const onSuccess = (e) => {
+  const sessionToken = e.detail.sessionJwt;
+  const refreshToken = e.detail.refreshJwt;
+  sdk.refresh();
+  createToken(
+    e?.detail?.user,
+    sessionToken,
+    refreshToken,
+    e.target.id,
+    e.target.getAttribute("redirect_url"),
+    e.target.getAttribute("project-id")
+  );
+};
+
+const onError = (err) => console.log(err);
+
+if (wcElement) {
+  wcElement.addEventListener("success", onSuccess);
+  wcElement.addEventListener("error", onError);
+}
+
+show_or_hide_flow()

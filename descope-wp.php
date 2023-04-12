@@ -66,8 +66,8 @@ function my_plugin_deactivate()
 
 function enqueue_descope_scripts()
 {
-    wp_enqueue_script('descope-web-component', 'https://unpkg.com/@descope/web-component@latest/dist/index.js', array(), '1.0.0', true);
-    wp_enqueue_script('descope-web-sdk', 'https://unpkg.com/@descope/web-js-sdk@1.0.0/dist/index.umd.js', array(), '1.0.0', true);
+    wp_enqueue_script('descope-web-component', 'https://unpkg.com/@descope/web-component@latest/dist/index.js', array(), '1.0.0');
+    wp_enqueue_script('descope-web-sdk', 'https://unpkg.com/@descope/web-js-sdk@1.0.0/dist/index.umd.js', array(), '1.0.0');
     wp_enqueue_script('descope-api-call', plugins_url('/src/descope-api-call.js', __FILE__), array(), '1.0.0', true);
 }
 add_action('wp_enqueue_scripts', 'enqueue_descope_scripts');
@@ -88,6 +88,9 @@ function descope_wc_shortcode($atts)
 
     // Return html
     $html = '<descope-wc id=' . $id . ' project-id=' . $projectID . ' flow-id=' . $flowId . ' redirect_url=' . $redirectUrl . '></descope-wc>';
+    $html .= '<script>';
+    $html .= 'const sdk = Descope({ projectId:"' . $projectID . '", persistTokens: true, autoRefresh: true });';
+    $html .= '</script>';
     return $html;
 }
 add_shortcode('descope-wc', 'descope_wc_shortcode');
