@@ -22,9 +22,6 @@
   $id = $_POST["idDescope"];
   $project_id = $_POST["projectId"];
 
-  // Code to set cookie
-  // setcookie('user_name', $user_name, time() + (86400 * 30), '/');
-
   // Fetch JWK public key from Descope API
   $url = 'https://api.descope.com/v2/keys/' . $project_id;
   $client = new GuzzleHttp\Client();

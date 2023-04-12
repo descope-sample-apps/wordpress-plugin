@@ -171,18 +171,6 @@ function logout_redirect()
     exit;
 }
 
-// function get_db_info()
-// {   
-//     // Get all attributes from DB
-//     $table_name = $wpdb->prefix . 'descope';
-//     $project_id = $wpdb->get_var("SELECT project_id FROM $table_name");
-//     $login_page_url = $wpdb->get_var("SELECT login_page_url FROM $table_name");
-    
-//     // Return JSON of DB information
-//     $db_info = array('table_name' => $table_name, 'project_id' => $project_id, 'login_page_url' => $login_page_url);
-//     return json_encode($db_info);
-// }
-
 
 function descope_plugin_add_menu_item()
 {
@@ -293,7 +281,6 @@ function descope_plugin_display_page()
                 submitBtn.disabled = false;
             } else { submitBtn.disabled = true; }
         }
-
     </script>
     <?php
 }

@@ -1,7 +1,5 @@
 <?php
     session_start();
-    //TODO: Remove userID and username. - DONE
-    // TODO: remove the DSR cookie - DONE
     if (isset($_COOKIE['DSR'])) {
         unset($_COOKIE['DSR']);
         setcookie('DSR', '', time() - 3600, '/'); // empty value and old timestamp
@@ -11,12 +9,6 @@
     $_SESSION["AUTH_ID"] = null;
     $_SESSION["AUTH_NAME"] = null;
     $_SESSION["SESSION_TOKEN"] = null;
-
-    //TODO: Reset COOKIE - DONE
-    if (isset($_COOKIE['user_name'])) {
-        unset($_COOKIE['user_name']);
-        setcookie('user_name', '', time() - 3600, '/'); // empty value and old timestamp
-    }
 
     session_destroy();
     
