@@ -26,13 +26,17 @@ After installation, you must activate the plugin within your WordPress site:
 2. Select **Plugins** from the sidebar, and then **Installed Plugins.**
 3. Choose **Activate** underneath the plugin's name.
 
-### Configure Descope
+### Configuring Descope
 
 Once you have installed and activated your plugin, you must go to the new `Descope Config` menu in the left-hand sidebar and input your Descope Project ID and redirect URL for if the login is **unsuccessful**.
 
+---
+
+Now that you've set everything up in the background, let's integrate the plugin features in your actual website.
+
 ### Add Descope Flows to your WP Pages
 
-To add the Descope flow page to your website, just add the tag `[descope-wc id="login" redirect_url="about" flow_id="sign-up-or-in"]` to the main text area of any page.
+First, you're going to want to add the Descope flows tag to one of your pages (this will be where the user signs in). To add the Descope flow page to your website, just add the tag `[descope-wc id="login" redirect_url="about" flow_id="sign-up-or-in"]` to the main text area of any page.
 
 1. The **id** is the HTML component tag for the Descope login flows screen.
 2. The **redirect_url** is where you would like Descope to redirect the client, after the login is **successful**.
@@ -40,7 +44,7 @@ To add the Descope flow page to your website, just add the tag `[descope-wc id="
 
 ### Protecting Pages
 
-The last step to adding Descope authentication to any of your website pages, is to add the session tag to the top of each page.
+The second and final step to adding Descope to any of your website pages, is to add the session tag to the top of each page.
 Simply add the tag `[descope-session]` to the top of the body in any of the pages you wish to require authentication for, and Descope will require authentication for any user that visits the page.
 
 And you're done! You can refer to the step-by-step installation/usage tutorial [here]() if you are having trouble with any of the installation steps.
