@@ -1,5 +1,5 @@
 <?php
-  require 'vendor/autoload.php';
+  require __DIR__ . '/../vendor/autoload.php';
   use GuzzleHttp\Client;
   use GuzzleHttp\Exception\RequestException;
   use GuzzleHttp\Psr7\Request;
@@ -9,8 +9,6 @@
   use Jose\Component\Signature\JWSVerifier;
   use Jose\Component\Signature\Serializer\CompactSerializer;
   use Jose\Component\Signature\Serializer\JWSSerializerManager;
-
-  echo "ALL packages are imported";
 
   /** 
    *  @package DescopePlugin
@@ -26,15 +24,13 @@
 
   // Code to set cookie
   // setcookie('user_name', $user_name, time() + (86400 * 30), '/');
-  echo "Starting to get from the API";
+
   // Fetch JWK public key from Descope API
   $url = 'https://api.descope.com/v2/keys/' . $project_id;
   $client = new GuzzleHttp\Client();
   $res = $client->request('GET', $url);
-  echo "WE MADE IT GUYS";
   $jwk_keys = json_decode($res->getBody(), true);
 
-  
   // Perform Validation Logic for Signature
   $jwk_set = JWKSet::createFromKeyData($jwk_keys);
   $jwsVerifier = new JWSVerifier(
@@ -48,10 +44,8 @@
 
   $jws = $serializerManager->unserialize($session_token);
   $isVerified = $jwsVerifier->verifyWithKeySet($jws, $jwk_set, 0);
-  echo "VALIDATED SIGNATURE";
   // If Signature is not valid, destroy session.
   if (!$isVerified) {
-    echo 'Invalid Signature';
     session_destroy();
   } else {
     /** Absolute path to the WordPress directory. */

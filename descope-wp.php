@@ -1,6 +1,6 @@
 <?php
 
-require 'vendor/autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Request;
@@ -109,7 +109,6 @@ function descope_session_shortcode($atts, $content = null)
             logout_redirect();
         }
     } else {
-        echo "Session token present";
         // If session_token expiry is in the future
         if (isset($_SESSION['SESSION_EXPIRY']) && time() < $_SESSION['SESSION_EXPIRY']) {
             echo "Session was not expired so we're good";
