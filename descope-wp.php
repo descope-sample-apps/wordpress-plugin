@@ -4,6 +4,12 @@ require __DIR__ . '/vendor/autoload.php';
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Request;
+use Jose\Component\Core\AlgorithmManager;
+use Jose\Component\Core\JWKSet;
+use Jose\Component\Signature\Algorithm\RS256;
+use Jose\Component\Signature\JWSVerifier;
+use Jose\Component\Signature\Serializer\CompactSerializer;
+use Jose\Component\Signature\Serializer\JWSSerializerManager;
 
 /**
  *  @package DescopePlugin
@@ -85,6 +91,12 @@ function descope_wc_shortcode($atts)
 
     // Extract projectId from table
     $projectID = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
+    
+    // If there is supposed to be a redirect upon success, set $redirectURL to that URL
+    if (isset($_GET['redirectOnSuccess']) && !empty($_GET['redirectOnSuccess'])) {
+        $redirectUrl = htmlspecialchars($_GET['redirectOnSuccess']);
+    }
+
     // Return html
     $html = '<div id="descope_flow_div"></div>';
     $html .= "<script>inject_flow('$projectID', '$flowId', '$redirectUrl')</script>";
@@ -92,6 +104,7 @@ function descope_wc_shortcode($atts)
     return $html;
 }
 add_shortcode('descope-wc', 'descope_wc_shortcode');
+
 
 function descope_wc_pre_post_update($post_ID, $data)
 {
@@ -139,89 +152,106 @@ function descope_wc_pre_post_update($post_ID, $data)
                 echo '<div class="error"><p>' . $error_message . '</p></div>';
             });
             wp_die(__($error_message));
-            
         }
     }
 }
-
 add_action('pre_post_update', 'descope_wc_pre_post_update', 10, 2);
+
 
 function descope_session_shortcode($atts, $content = null)
 {
     session_start();
-
-    $base_url = get_site_url();
-    // If session_token info is present
-    if (!isset($_SESSION['SESSION_TOKEN'])) {
-        echo "No session token present";
-        // If DSR cookie is set
-        if (isset($_COOKIE['DSR']) && refresh_token($_COOKIE['DSR'])) {
-            echo "Session token was successfully refreshed, with DSR cookie";
-        } else {
-            echo "DSR Cookie was not set or refresh failed";
-            logout_redirect();
-        }
+    if (validate_cookie()) {
+        echo "You're validated!!!!";
     } else {
-        // If session_token expiry is in the future
-        if (isset($_SESSION['SESSION_EXPIRY']) && time() < $_SESSION['SESSION_EXPIRY']) {
-            echo "Session was not expired so we're good";
-        // If refresh_token is present, attempt refresh with refresh_token
-        } else if (isset($_SESSION['REFRESH_TOKEN']) && refresh_token($_SESSION['REFRESH_TOKEN'])) {
-            echo "Session token was successfully refreshed";
-        } else {
-            login_redirect();
-        }
+        echo "Could not validate cookie";
+        $currentPageUrl = substr($_SERVER['REQUEST_URI'], 1);
+        login_redirect($currentPageUrl);
     }
 }
 add_shortcode('descope-session', 'descope_session_shortcode');
 
 
-function refresh_token($refresh_token) 
+function validate_cookie() 
 {
-    // Attempt to refresh the session token, with the refresh_token
+    // Check to see if cookie exists
+    if (!isset($_COOKIE['DS_SESSION'])) {
+        return false;
+    }
+    echo "COOKIE: " . $_COOKIE['DS_SESSION'];
     global $wpdb;
     $table_name = $wpdb->prefix . 'descope';
 
-    $client = new GuzzleHttp\Client();
-    $projectId = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
-    $auth_token = $projectId . ':' . $refresh_token;
-    $res = $client->request(
-        'POST',
-        'https://api.descope.com/v1/auth/refresh',
-        ['headers' => 
-            [
-            'Authorization' => "Bearer {$auth_token}",
-            'Content-Type' => "application/json",
-            ]
-        ]
-    );
+    $project_id = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
 
-    // If session token was refreshed successfully, reset $_SESSION info
-    if ($res->getStatusCode() == 200) {
-        $_SESSION["SESSION_TOKEN"] = json_decode($res->getBody(), true)["sessionJwt"];
-        $_SESSION["SESSION_EXPIRY"] = json_decode($res->getBody(), true)["cookieExpiration"];
+    $url = 'https://api.descope.com/v2/keys/' . $project_id;
+    $client = new GuzzleHttp\Client();
+    $res = $client->request('GET', $url);
+    $jwk_keys = json_decode($res->getBody(), true);
+
+    // Perform Validation Logic for Signature
+    $jwk_set = JWKSet::createFromKeyData($jwk_keys);
+    $jwsVerifier = new JWSVerifier(
+        new AlgorithmManager([
+        new RS256(),
+        ])
+    );
+    $serializerManager = new JWSSerializerManager([
+        new CompactSerializer(),
+    ]);
+
+    $jws = $serializerManager->unserialize($_COOKIE['DS_SESSION']);
+  
+    // If signature is not valid, destroy session and invalidate cookie.
+    if ($jwsVerifier->verifyWithKeySet($jws, $jwk_set, 0)) {
         return true;
+    } else {
+        session_destroy();
+
+        // Unset cookie
+        unset($_COOKIE['DS_SESSION']);
+        setcookie('DS_SESSION', '', [
+            'expires' => time() - 3600,
+            'path' => '/',
+            'secure' => true,
+            'httponly' => true,
+            'samesite' => 'Strict',
+        ]);
+        return false;
     }
-    return false;
 }
 
-function logout_redirect() 
-{
-    session_destroy();
-    
-    // Unset cookie
-    unset($_COOKIE['DSR']);
-    setcookie('user_name', '', time() - 3600, '/');
-
+function login_redirect($currentPageUrl)
+{   
     global $wpdb;
     $table_name = $wpdb->prefix . 'descope';
 
     // Get redirect URL from DB
     $login_page_url = $wpdb->get_var("SELECT login_page_url FROM $table_name");
     $base_url = get_site_url();
-    $pageUrl = $base_url . '/' . $login_page_url;
+    $pageUrl = "$base_url/$login_page_url?redirectOnSuccess=$currentPageUrl";
     header("location:" . $pageUrl);
-    exit;
+}
+
+function logout() 
+{
+    session_destroy();
+    
+    // Unset cookie
+    unset($_COOKIE['DS_SESSION']);
+    setcookie('DS_SESSION', '', [
+        'expires' => time() - 3600,
+        'path' => '/',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Strict',
+      ]);
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'descope';
+
+    // Redirect to Login Page
+    login_redirect();
 }
 
 

@@ -1,4 +1,5 @@
 <?php
+  session_start();
   require __DIR__ . '/../vendor/autoload.php';
   use GuzzleHttp\Client;
   use GuzzleHttp\Exception\RequestException;
@@ -9,17 +10,12 @@
   use Jose\Component\Signature\JWSVerifier;
   use Jose\Component\Signature\Serializer\CompactSerializer;
   use Jose\Component\Signature\Serializer\JWSSerializerManager;
-
+  
   /** 
    *  @package DescopePlugin
    */
-  session_start();
 
-  $user_id = $_POST["userId"];
-  $user_name = $_POST["userName"];
   $session_token = $_POST["sessionToken"];
-  $refresh_token = $_POST["refreshToken"];
-  $id = $_POST["idDescope"];
   $project_id = $_POST["projectId"];
 
   // Fetch JWK public key from Descope API
@@ -41,18 +37,32 @@
 
   $jws = $serializerManager->unserialize($session_token);
   $isVerified = $jwsVerifier->verifyWithKeySet($jws, $jwk_set, 0);
-  // If Signature is not valid, destroy session.
+  
+  // If Signature is not valid, destroy session and invalidate cookie.
   if (!$isVerified) {
     session_destroy();
+
+    // Unset cookie
+    unset($_COOKIE['DS_SESSION']);
+    setcookie('DS_SESSION', '', [
+        'expires' => time() - 3600,
+        'path' => '/',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Strict',
+      ]);
   } else {
     /** Absolute path to the WordPress directory. */
     if (!defined('ABSPATH'))
       define('ABSPATH', dirname(__FILE__) . '/');
 
-    $_SESSION["AUTH_ID"] = $user_id;
-    $_SESSION["AUTH_NAME"] = $user_name;
-    $_SESSION["SESSION_TOKEN"] = $session_token;
-    $_SESSION["SESSION_EXPIRY"] = json_decode($jws->getPayload(), true)["exp"];
-    $_SESSION["REFRESH_TOKEN"] = $refresh_token;
-    echo 'Login Successful';
+    $session_expiry = json_decode($jws->getPayload(), true)["exp"];
+    // $refresh_expiry = strtotime(json_decode($jws->getPayload(), true)["rexp"]);
+    $cookieSet = setcookie('DS_SESSION', $session_token, [
+      'expires' => $session_expiry,
+      'path' => '/',
+      'secure' => true,
+      'httponly' => true,
+      'samesite' => 'Strict',
+    ]);
   }
