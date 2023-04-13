@@ -62,6 +62,8 @@ samesite = Strict
 
 However, if you're using a hosting service like [WPEngine](https://wpengine.com/), you will need to contact their support team to disable page caching when detecting a cookie with the name `DS_SESSION` so that it can be read by the PHP code. After that, this plugin should work seamlessly.
 
+---
+
 And you're done! You can refer to the step-by-step installation/usage tutorial [here]() if you are having trouble with any of the installation steps.
 
 If you have any questions about Descope, feel free to [reach out](https://docs.descope.com/support/)!
