@@ -206,17 +206,7 @@ function validate_cookie()
     if ($jwsVerifier->verifyWithKeySet($jws, $jwk_set, 0)) {
         return true;
     } else {
-        session_destroy();
-
-        // Unset cookie
-        unset($_COOKIE['DS_SESSION']);
-        setcookie('DS_SESSION', '', [
-            'expires' => time() - 3600,
-            'path' => '/',
-            'secure' => true,
-            'httponly' => true,
-            'samesite' => 'Strict',
-        ]);
+        unset_cookie();
         return false;
     }
 }
@@ -233,8 +223,7 @@ function login_redirect($currentPageUrl)
     header("location:" . $pageUrl);
 }
 
-function logout() 
-{
+function unset_cookie() {
     session_destroy();
     
     // Unset cookie
@@ -246,12 +235,6 @@ function logout()
         'httponly' => true,
         'samesite' => 'Strict',
       ]);
-
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'descope';
-
-    // Redirect to Login Page
-    login_redirect();
 }
 
 
