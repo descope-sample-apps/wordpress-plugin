@@ -74,7 +74,7 @@ add_action('wp_enqueue_scripts', 'enqueue_descope_scripts');
 
 
 function descope_wc_shortcode($atts)
-{   
+{
     global $wpdb;
     $table_name = $wpdb->prefix . 'descope';
 
@@ -139,7 +139,7 @@ function descope_wc_pre_post_update($post_ID, $data)
                 echo '<div class="error"><p>' . $error_message . '</p></div>';
             });
             wp_die(__($error_message));
-            
+
         }
     }
 }
@@ -165,7 +165,7 @@ function descope_session_shortcode($atts, $content = null)
         // If session_token expiry is in the future
         if (isset($_SESSION['SESSION_EXPIRY']) && time() < $_SESSION['SESSION_EXPIRY']) {
             echo "Session was not expired so we're good";
-        // If refresh_token is present, attempt refresh with refresh_token
+            // If refresh_token is present, attempt refresh with refresh_token
         } else if (isset($_SESSION['REFRESH_TOKEN']) && refresh_token($_SESSION['REFRESH_TOKEN'])) {
             echo "Session token was successfully refreshed";
         } else {
@@ -176,7 +176,7 @@ function descope_session_shortcode($atts, $content = null)
 add_shortcode('descope-session', 'descope_session_shortcode');
 
 
-function refresh_token($refresh_token) 
+function refresh_token($refresh_token)
 {
     // Attempt to refresh the session token, with the refresh_token
     global $wpdb;
@@ -188,10 +188,11 @@ function refresh_token($refresh_token)
     $res = $client->request(
         'POST',
         'https://api.descope.com/v1/auth/refresh',
-        ['headers' => 
+        [
+            'headers' =>
             [
-            'Authorization' => "Bearer {$auth_token}",
-            'Content-Type' => "application/json",
+                'Authorization' => "Bearer {$auth_token}",
+                'Content-Type' => "application/json",
             ]
         ]
     );
@@ -205,10 +206,10 @@ function refresh_token($refresh_token)
     return false;
 }
 
-function logout_redirect() 
+function logout_redirect()
 {
     session_destroy();
-    
+
     // Unset cookie
     unset($_COOKIE['DSR']);
     setcookie('user_name', '', time() - 3600, '/');
@@ -257,7 +258,7 @@ function descope_plugin_display_page()
 
             global $wpdb;
             $table_name = $wpdb->prefix . 'descope';
-            
+
             // Check if there is an existing row in the table
             $existing_row = $wpdb->get_row("SELECT * FROM $table_name LIMIT 1");
 
@@ -287,19 +288,23 @@ function descope_plugin_display_page()
         $table_name = $wpdb->prefix . 'descope';
         $project_id = $wpdb->get_var("SELECT project_id FROM $table_name");
         $login_page_url = $wpdb->get_var("SELECT login_page_url FROM $table_name");
-        
+
         ?>
 
         <head>
             <style>
                 .projectid-but {
-                    background: #1B769C;
+                    background: #2271b1;
+                    border-color: #2271b1;
+                    width: 100px;
+                    height: 34px;
                     border: none;
                     color: white;
                     padding: 5px 20px;
-                    border-radius: 6px;
+                    border-radius: 5px;
                     cursor: pointer;
                 }
+
 
                 .projectid-but:disabled {
                     background: white;
@@ -307,20 +312,60 @@ function descope_plugin_display_page()
                     border: 1px solid black;
                     cursor: not-allowed;
                 }
+
+                .input-boxes-descope {
+                    margin-top: 24px;
+                }
+
+                .descope-custom-input {
+                    margin-left: 46px;
+                    border: 1px solid black;
+                    width: 245px;
+                    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+                    height: 36px;
+                }
+
+                label.input-box-label {
+                    font-weight: 600;
+                }
+
+                .td-padding {
+                    padding: 20px;
+                }
             </style>
         </head>
 
-        <form method="post">
+        <form id="my-form" method="post">
             <div class="input-boxes-descope">
                 <!-- Input box for projectID -->
-                <label for="descope_input">Enter your Project ID:</label>
-                <input type="text" id="descope_input" name="descope_input" onkeyup="validateInput()"
-                    value="<?php echo $project_id; ?>"><br /><br />
-                <!-- Input box for redirect url if session token does not exist -->
-                <label for="descope_input">Enter redirect url if session token does not exist:</label>
-                <input type="text" id="login_page_url" name="login_page_url" onkeyup="validateInput()"
-                    value="<?php echo $login_page_url; ?>"><br /><br /><br />
-                <input class="projectid-but" type="submit" id="submit-btn" name="submit" value="Submit" disabled>
+                <table>
+                    <tr>
+                        <td class="td-padding">
+                            <label class="input-box-label" for="descope_input">Enter your Project ID:</label>
+                        </td>
+                        <td class="td-padding">
+                            <input type="text" class="descope-custom-input" id="descope_input" name="descope_input"
+                                onkeyup="validateInput()" required value="<?php echo $project_id; ?>">
+                        </td>
+                        <!-- Input box for redirect url if session token does not exist -->
+                    <tr class="td-padding">
+                        <td class="td-padding">
+                            <label class="input-box-label" for="descope_input">Enter redirect url (slug) if session<br />
+                                token
+                                does not
+                                exist:</label>
+                        </td>
+                        <td class="td-padding">
+                            <input type="text" required class="descope-custom-input" id="login_page_url"
+                                name="login_page_url" onkeyup="validateInput()" value="<?php echo $login_page_url; ?>">
+                        </td>
+                    </tr>
+                </table>
+
+                <div class="td-padding">
+                    <input class="projectid-but" type="submit" id="submit-btn" name="submit" value="Submit" disabled>
+                </div>
+
             </div>
         </form>
     </div>
