@@ -161,13 +161,10 @@ add_action('pre_post_update', 'descope_wc_pre_post_update', 10, 2);
 function descope_session_shortcode($atts, $content = null)
 {
     session_start();
-    if (validate_cookie()) {
-        echo "You're validated!!!!";
-    } else {
-        echo "Could not validate cookie";
+    if (!validate_cookie()) {
         $currentPageUrl = substr($_SERVER['REQUEST_URI'], 1);
         login_redirect($currentPageUrl);
-    }
+    } 
 }
 add_shortcode('descope-session', 'descope_session_shortcode');
 
@@ -178,7 +175,7 @@ function validate_cookie()
     if (!isset($_COOKIE['DS_SESSION'])) {
         return false;
     }
-    echo "COOKIE: " . $_COOKIE['DS_SESSION'];
+    
     global $wpdb;
     $table_name = $wpdb->prefix . 'descope';
 

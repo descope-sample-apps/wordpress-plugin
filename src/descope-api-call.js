@@ -39,10 +39,8 @@ async function inject_flow(projectId, flowId, redirectUrl) {
     autoRefresh: true,
   });
   const sessionToken = sdk.getSessionToken();
-  const refreshToken = sdk.getRefreshToken();
   const notValidToken = sessionToken && sdk.isJwtExpired(sessionToken);
   if (sessionToken && !notValidToken) {
-    const user = await sdk.me();
     createToken(sessionToken, redirectUrl, projectId);
   } else {
     const e = document.getElementById("descope_flow_div");
