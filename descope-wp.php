@@ -52,6 +52,32 @@ function my_plugin_activate()
 ) $charset_collate;";
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
     dbDelta($sql);
+    createLogoutPage();
+}
+
+function createLogoutPage()
+{
+    // Create "Logout" page with [descope-logout] shortcode
+    $page_title = 'Descope Logout';
+    $page_content = '<!-- /wp:shortcode --> [descope-logout]  <!-- /wp:shortcode -->';
+    $page_slug = 'descope-logout';
+    $page_status = 'publish';
+    $page = get_page_by_title($page_title, OBJECT, 'page');
+
+    if (!$page) {
+        $page_args = array(
+            'post_title' => $page_title,
+            'post_content' => $page_content,
+            'post_name' => $page_slug,
+            'post_status' => $page_status,
+            'post_type' => 'page'
+        );
+
+        wp_insert_post($page_args);
+    }
+
+    wp_delete_nav_menu('descope-logout');
+
 }
 
 
@@ -67,6 +93,12 @@ function my_plugin_deactivate()
     // SQL query to drop table
     $query = "DROP TABLE IF EXISTS $table_name;";
     $wpdb->query($query);
+
+    // Delete the Logout page
+    $logout_page = get_page_by_title('Descope Logout');
+    if ($logout_page) {
+        wp_delete_post($logout_page->ID, true);
+    }
 }
 
 
@@ -105,6 +137,28 @@ function descope_wc_shortcode($atts)
 }
 add_shortcode('descope-wc', 'descope_wc_shortcode');
 
+function descope_logout_shortcode()
+{
+    session_start();
+    if (isset($_COOKIE['DS_SESSION'])) {
+        unset($_COOKIE['DS_SESSION']);
+        setcookie('DS_SESSION', '', time() - 3600, '/'); // empty value and old timestamp
+    }
+
+    $_SESSION["AUTH_ID"] = null;
+    $_SESSION["AUTH_NAME"] = null;
+    $_SESSION["SESSION_TOKEN"] = null;
+
+    session_destroy();
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'descope';
+    $login_page_url = $wpdb->get_var("SELECT login_page_url FROM $table_name");
+    $base_url = get_site_url();
+    $pageUrl = $base_url . '/' . $login_page_url;
+    header("location:" . $pageUrl);
+}
+add_shortcode('descope-logout', 'descope_logout_shortcode');
 
 function descope_wc_pre_post_update($post_ID, $data)
 {
