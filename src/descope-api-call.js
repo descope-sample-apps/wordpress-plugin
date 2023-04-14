@@ -24,7 +24,7 @@ function createToken(userDetails, sessionToken, redirectURL, projectId) {
 
 const onSuccess = (e) => {
   const sessionToken = e.detail.sessionJwt;
-  // sdk.refresh();
+
   createToken(
     e?.detail?.user,
     sessionToken,
@@ -41,11 +41,13 @@ async function inject_flow(projectId, flowId, redirectUrl) {
     persistTokens: true,
     autoRefresh: true,
   });
+
   const sessionToken = sdk.getSessionToken();
   const notValidToken = sessionToken && sdk.isJwtExpired(sessionToken);
   if (sessionToken && !notValidToken) {
     const user = await sdk.me();
-    createToken(user.data, sessionToken, redirectUrl, projectId);
+    sdk.refresh();
+    createToken(user.data, sessionToken, refreshToken, redirectUrl, projectId);
   } else {
     const e = document.getElementById("descope_flow_div");
     e.innerHTML = `<descope-wc project-id=${projectId} flow-id=${flowId} redirect_url=${redirectUrl}></descope-wc>`;
