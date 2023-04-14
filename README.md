@@ -39,7 +39,7 @@ Now that you've set everything up in the background, let's integrate the plugin 
 
 ### Add Descope Flows to your WP Pages
 
-First, you're going to want to add the Descope flows tag to one of your pages (this will be where the user signs in). To add the Descope flow page to your website, just add the tag `[descope-wc id="login" redirect_url="about" flow_id="sign-up-or-in"]` to the main text area of any page.
+First, you're going to want to add the Descope flows tag to one of your pages (this will be where the user signs in). To add the Descope flow page to your website, just add the tag `[descope-wc id="login" redirect_url="about" flow_id="sign-up-or-in" /]` to the main text area of any page.
 
 1. The **id** is the HTML component tag for the Descope login flows screen.
 2. The **redirect_url** is where you would like Descope to redirect the client, after the login is **successful**.
@@ -49,6 +49,20 @@ First, you're going to want to add the Descope flows tag to one of your pages (t
 
 The second and final step to adding Descope to any of your website pages, is to add the session tag to the top of each page.
 Simply add the tag `[descope-session]` to the top of the body in any of the pages you wish to require authentication for, and Descope will require authentication for any user that visits the page.
+
+**One caveat**: You will need to make sure that your WordPress hosting service is not page caching and preventing the plugin from being able to read the `DS_SESSION` cookie from the browser's localStorage.
+
+The cookie itself is:
+
+```
+httponly = true
+secure = true
+samesite = Strict
+```
+
+However, if you're using a hosting service like [WPEngine](https://wpengine.com/), you will need to contact their support team to disable page caching when detecting a cookie with the name `DS_SESSION` so that it can be read by the PHP code. After that, this plugin should work seamlessly.
+
+---
 
 And you're done! You can refer to the step-by-step installation/usage tutorial [here]() if you are having trouble with any of the installation steps.
 
