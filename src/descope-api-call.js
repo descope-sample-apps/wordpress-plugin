@@ -1,5 +1,7 @@
-function createToken(sessionToken, redirectURL, projectId) {
+function createToken(userDetails, sessionToken, redirectURL, projectId) {
   var formData = new FormData();
+  formData.append("userId", userDetails.userId);
+  formData.append("userName", userDetails.name);
   formData.append("sessionToken", sessionToken);
   formData.append("projectId", projectId);
 
@@ -24,6 +26,7 @@ const onSuccess = (e) => {
   const sessionToken = e.detail.sessionJwt;
   // sdk.refresh();
   createToken(
+    e?.detail?.user,
     sessionToken,
     e.target.getAttribute("redirect_url"),
     e.target.getAttribute("project-id")
@@ -41,7 +44,8 @@ async function inject_flow(projectId, flowId, redirectUrl) {
   const sessionToken = sdk.getSessionToken();
   const notValidToken = sessionToken && sdk.isJwtExpired(sessionToken);
   if (sessionToken && !notValidToken) {
-    createToken(sessionToken, redirectUrl, projectId);
+    const user = await sdk.me();
+    createToken(user.data, sessionToken, redirectUrl, projectId);
   } else {
     const e = document.getElementById("descope_flow_div");
     e.innerHTML = `<descope-wc project-id=${projectId} flow-id=${flowId} redirect_url=${redirectUrl}></descope-wc>`;

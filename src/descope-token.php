@@ -15,11 +15,12 @@
    *  @package DescopePlugin
    */
 
+  $user_id = $_POST["userId"];
+  $user_name = $_POST["userName"];
   $session_token = $_POST["sessionToken"];
-  $project_id = $_POST["projectId"];
 
   // Fetch JWK public key from Descope API
-  $url = 'https://api.descope.com/v2/keys/' . $project_id;
+  $url = 'https://api.descope.com/v2/keys/' . $_POST["projectId"];
   $client = new GuzzleHttp\Client();
   $res = $client->request('GET', $url);
   $jwk_keys = json_decode($res->getBody(), true);
@@ -58,7 +59,14 @@
 
     $session_expiry = json_decode($jws->getPayload(), true)["exp"];
     // $refresh_expiry = strtotime(json_decode($jws->getPayload(), true)["rexp"]);
-    $cookieSet = setcookie('DS_SESSION', $session_token, [
+
+    $cookie_data = array(
+      "id" => $user_id,
+      "name" => $user_name,
+      "token" => $session_token,
+    );
+
+    $cookieSet = setcookie('DS_SESSION', json_encode($cookie_data), [
       'expires' => $session_expiry,
       'path' => '/',
       'secure' => true,

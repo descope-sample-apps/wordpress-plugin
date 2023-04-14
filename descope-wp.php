@@ -227,41 +227,44 @@ add_shortcode('descope-session', 'descope_session_shortcode');
 
 function validate_cookie()
 {
+    // Use array_key_exists to check if JSON string contains session token
     // Check to see if cookie exists
-    if (!isset($_COOKIE['DS_SESSION'])) {
-        return false;
-    }
-
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'descope';
-
-    $project_id = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
-
-    $url = 'https://api.descope.com/v2/keys/' . $project_id;
-    $client = new GuzzleHttp\Client();
-    $res = $client->request('GET', $url);
-    $jwk_keys = json_decode($res->getBody(), true);
-
-    // Perform Validation Logic for Signature
-    $jwk_set = JWKSet::createFromKeyData($jwk_keys);
-    $jwsVerifier = new JWSVerifier(
-        new AlgorithmManager([
-            new RS256(),
-        ])
-    );
-    $serializerManager = new JWSSerializerManager([
-        new CompactSerializer(),
-    ]);
-
-    $jws = $serializerManager->unserialize($_COOKIE['DS_SESSION']);
-
-    // If signature is not valid, destroy session and invalidate cookie.
-    if ($jwsVerifier->verifyWithKeySet($jws, $jwk_set, 0)) {
+    if (isset($_COOKIE['S_SESSION']) && array_key_exists("token", json_decode($_COOKIE['DS_SESSION']))) {
         return true;
     } else {
-        unset_cookie();
         return false;
     }
+
+    // global $wpdb;
+    // $table_name = $wpdb->prefix . 'descope';
+
+    // $project_id = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
+
+    // $url = 'https://api.descope.com/v2/keys/' . $project_id;
+    // $client = new GuzzleHttp\Client();
+    // $res = $client->request('GET', $url);
+    // $jwk_keys = json_decode($res->getBody(), true);
+
+    // // Perform Validation Logic for Signature
+    // $jwk_set = JWKSet::createFromKeyData($jwk_keys);
+    // $jwsVerifier = new JWSVerifier(
+    //     new AlgorithmManager([
+    //     new RS256(),
+    //     ])
+    // );
+    // $serializerManager = new JWSSerializerManager([
+    //     new CompactSerializer(),
+    // ]);
+
+    // $jws = $serializerManager->unserialize($_COOKIE['DS_SESSION']);
+  
+    // // If signature is not valid, destroy session and invalidate cookie.
+    // if ($jwsVerifier->verifyWithKeySet($jws, $jwk_set, 0)) {
+    //     return true;
+    // } else {
+    //     unset_cookie();
+    //     return false;
+    // }
 }
 
 
