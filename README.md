@@ -39,7 +39,7 @@ Now that you've set everything up in the background, let's integrate the plugin 
 
 ### Add Descope Flows to your WP Pages
 
-First, you're going to want to add the Descope flows tag to one of your pages (this will be where the user signs in). To add the Descope flow page to your website, just add a shortcode block to the main text area of any page, and add the tag `[descope-wc id="login" redirect_url="about" flow_id="sign-up-or-in" /]`.
+First, you're going to want to add the Descope flows tag to one of your pages (this will be where the user signs in). To add the Descope flow page to your website, just add a shortcode block to the main text area of any page, and add the shortcode `[descope-wc id="login" redirect_url="about" flow_id="sign-up-or-in" /]`.
 
 1. The **id** is the HTML component tag for the Descope login flows screen.
 2. The **redirect_url** is where you would like Descope to redirect the client, after the login is **successful**.
