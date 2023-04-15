@@ -46,6 +46,7 @@ function my_plugin_activate()
         id INT(11) NOT NULL AUTO_INCREMENT,
         project_id VARCHAR(255) NOT NULL,
         login_page_url VARCHAR(255) NULL,
+        jwk_set VARCHAR(30000) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY  (id)
@@ -58,7 +59,7 @@ function my_plugin_activate()
 function createLogoutPage()
 {
     // Create "Logout" page with [descope-logout] shortcode
-    $page_title = 'Descope Logout';
+    $page_title = 'Logout';
     $page_content = '<!-- /wp:shortcode --> [descope-logout]  <!-- /wp:shortcode -->';
     $page_slug = 'descope-logout';
     $page_status = 'publish';
@@ -72,12 +73,9 @@ function createLogoutPage()
             'post_status' => $page_status,
             'post_type' => 'page'
         );
-
         wp_insert_post($page_args);
     }
-
     wp_delete_nav_menu('descope-logout');
-
 }
 
 
@@ -87,9 +85,10 @@ register_deactivation_hook(__FILE__, 'my_plugin_deactivate');
 function my_plugin_deactivate()
 {
     session_destroy();
+    unset_cookie();
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'descope'; // adding default prefix to table name
-
     // SQL query to drop table
     $query = "DROP TABLE IF EXISTS $table_name;";
     $wpdb->query($query);
@@ -216,6 +215,7 @@ function descope_session_shortcode($atts, $content = null)
 {
     session_start();
     if (!validate_cookie()) {
+        echo "Could not validate cookie";
         $currentPageUrl = substr($_SERVER['REQUEST_URI'], 1);
         login_redirect($currentPageUrl);
     }
@@ -224,47 +224,45 @@ function descope_session_shortcode($atts, $content = null)
 add_shortcode('descope-session', 'descope_session_shortcode');
 
 
-
 function validate_cookie()
 {
-    // Use array_key_exists to check if JSON string contains session token
-    // Check to see if cookie exists
-    if (isset($_COOKIE['S_SESSION']) && array_key_exists("token", json_decode($_COOKIE['DS_SESSION']))) {
-        return true;
-    } else {
+    // Use isset to check if JSON string contains session token
+    if (!isset(json_decode(stripslashes($_COOKIE["DS_SESSION"]), true)["token"])) {
         return false;
+    } else {
+        $session_token = json_decode(stripslashes($_COOKIE["DS_SESSION"]), true)["token"];
+
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'descope';
+
+        // $project_id = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
+        $jwk_serialized = $wpdb->get_var("SELECT jwk_set FROM $table_name WHERE id = 1");
+        $jwk_keys = unserialize($jwk_serialized);
+        // $url = 'https://api.descope.com/v2/keys/' . $project_id;
+        // $client = new GuzzleHttp\Client();
+        // $res = $client->request('GET', $url);
+        // $jwk_keys = json_decode($res->getBody(), true);
+
+        // Perform Validation Logic for Signature
+        $jwk_set = JWKSet::createFromKeyData($jwk_keys);
+        $jwsVerifier = new JWSVerifier(
+            new AlgorithmManager([
+            new RS256(),
+            ])
+        );
+        $serializerManager = new JWSSerializerManager([
+            new CompactSerializer(),
+        ]);
+
+        $jws = $serializerManager->unserialize($session_token);
+        // If signature is not valid, destroy session and invalidate cookie.
+        if ($jwsVerifier->verifyWithKeySet($jws, $jwk_set, 0)) {
+            return true;
+        } else {
+            unset_cookie();
+            return false;
+        }
     }
-
-    // global $wpdb;
-    // $table_name = $wpdb->prefix . 'descope';
-
-    // $project_id = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
-
-    // $url = 'https://api.descope.com/v2/keys/' . $project_id;
-    // $client = new GuzzleHttp\Client();
-    // $res = $client->request('GET', $url);
-    // $jwk_keys = json_decode($res->getBody(), true);
-
-    // // Perform Validation Logic for Signature
-    // $jwk_set = JWKSet::createFromKeyData($jwk_keys);
-    // $jwsVerifier = new JWSVerifier(
-    //     new AlgorithmManager([
-    //     new RS256(),
-    //     ])
-    // );
-    // $serializerManager = new JWSSerializerManager([
-    //     new CompactSerializer(),
-    // ]);
-
-    // $jws = $serializerManager->unserialize($_COOKIE['DS_SESSION']);
-  
-    // // If signature is not valid, destroy session and invalidate cookie.
-    // if ($jwsVerifier->verifyWithKeySet($jws, $jwk_set, 0)) {
-    //     return true;
-    // } else {
-    //     unset_cookie();
-    //     return false;
-    // }
 }
 
 
@@ -331,14 +329,30 @@ function descope_plugin_display_page()
 
             // Check if there is an existing row in the table
             $existing_row = $wpdb->get_row("SELECT * FROM $table_name LIMIT 1");
+            
+            // try {
+            //     $url = 'https://api.descope.com/v2/keys/' . $new_project_id;
+            //     $client = new GuzzleHttp\Client();
+            //     $res = $client->request('GET', $url);
+            //     $jwk_set = serialize(json_decode($res->getBody(), true));
+            //     echo "JWK_SET: " . $jwk_set;
+            // } catch (ClientException $e) {
+                
+            // }
 
+            $url = 'https://api.descope.com/v2/keys/' . $new_project_id;
+            $client = new GuzzleHttp\Client();
+            $res = $client->request('GET', $url);
+            $jwk_set = serialize(json_decode($res->getBody(), true));
+            echo "JWK_SET: " . $jwk_set;
+            
             if ($existing_row !== null) {
-                // An existing row is found, update both fields
+                // An existing row is found, update fields
                 $wpdb->update(
                     $table_name,
-                    array('project_id' => $new_project_id, 'login_page_url' => $new_redirect_url),
+                    array('project_id' => $new_project_id, 'login_page_url' => $new_redirect_url, 'jwk_set'=> $jwk_set),
                     array('id' => $existing_row->id),
-                    array('%s', '%s'),
+                    array('%s', '%s', '%s'),
                     array('%d')
                 );
             } else {
@@ -347,8 +361,8 @@ function descope_plugin_display_page()
 
                 $wpdb->insert(
                     $table_name,
-                    array('project_id' => $new_project_id, 'login_page_url' => $new_redirect_url),
-                    array('%s', '%s')
+                    array('project_id' => $new_project_id, 'login_page_url' => $new_redirect_url, 'jwk_set' => $jwk_set),
+                    array('%s', '%s', '%s')
                 );
             }
         }
@@ -450,5 +464,5 @@ function descope_plugin_display_page()
             } else { submitBtn.disabled = true; }
         }
     </script>
-    <?php
+<?php
 }

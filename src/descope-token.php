@@ -18,9 +18,10 @@
   $user_id = $_POST["userId"];
   $user_name = $_POST["userName"];
   $session_token = $_POST["sessionToken"];
+  $project_id = $_POST["projectId"];
 
   // Fetch JWK public key from Descope API
-  $url = 'https://api.descope.com/v2/keys/' . $_POST["projectId"];
+  $url = 'https://api.descope.com/v2/keys/' . $project_id;
   $client = new GuzzleHttp\Client();
   $res = $client->request('GET', $url);
   $jwk_keys = json_decode($res->getBody(), true);
@@ -73,4 +74,6 @@
       'httponly' => true,
       'samesite' => 'Strict',
     ]);
+    
+    echo "COOKIE DATA: " . $cookie_data;
   }
