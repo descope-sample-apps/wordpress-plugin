@@ -48,7 +48,7 @@ First, you're going to want to add the Descope flows tag to one of your pages (t
 ### Protecting Pages
 
 The second and final step to adding Descope to any of your website pages, is to add the session tag to the top of each page.
-Simply add the tag `[descope-session]` to a shortcode block in any of the pages you wish to require authentication for, and Descope will require authentication for any user that visits the page.
+Simply add the shortcode `[descope-session]` to a shortcode block in any of the pages you wish to require authentication for, and Descope will require authentication for any user that visits the page.
 
 **One caveat**: You will need to make sure that your WordPress hosting service is not page caching and preventing the plugin from being able to read the `DS_SESSION` cookie from the browser's localStorage.
 
