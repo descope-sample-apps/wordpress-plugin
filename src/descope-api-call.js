@@ -60,16 +60,19 @@ async function inject_flow(projectId, flowId, redirectUrl) {
 }
 
 async function logout(projectId, loginPageUrl) {
+  console.log("Made it to logout!");
   const sdk = Descope({
     projectId: projectId,
     persistTokens: true,
     autoRefresh: true,
   });
 
-  const resp = await sdk.logout();
+  console.log("GOT the Descope SDK object");
 
-  // Redirect back to Login Page
-  let getUrl = window.location;
-  let baseUrl = getUrl.protocol + "//" + getUrl.host;
-  window.location = `${baseUrl}/${loginPageUrl}`;
+  sdk.logout();
+
+  console.log("Calling logout successful!, redirecting!");
+
+  // Redirect back to login page
+  window.location.href = `${loginPageUrl}`;
 }

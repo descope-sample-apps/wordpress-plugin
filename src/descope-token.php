@@ -75,3 +75,4 @@
       'samesite' => 'Strict',
     ]);
   }
+?>

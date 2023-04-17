@@ -32,7 +32,6 @@ register_activation_hook(__FILE__, 'my_plugin_activate');
 
 function my_plugin_activate()
 {
-    session_start();
     global $wpdb;
 
     // Create table when the plugin activates
@@ -82,7 +81,6 @@ register_deactivation_hook(__FILE__, 'my_plugin_deactivate');
 
 function my_plugin_deactivate()
 {
-    session_destroy();
     unset_cookie();
 
     global $wpdb;
@@ -137,24 +135,20 @@ add_shortcode('descope-wc', 'descope_wc_shortcode');
 
 function descope_logout_shortcode()
 {
-    session_start();
     if (isset($_COOKIE['DS_SESSION'])) {
         // Destroys cookie
         unset_cookie();
     }
 
-    $_SESSION["AUTH_ID"] = null;
-    $_SESSION["AUTH_NAME"] = null;
-    $_SESSION["SESSION_TOKEN"] = null;
-
-    session_destroy();
-
     global $wpdb;
     $table_name = $wpdb->prefix . 'descope';
-    $login_page_url = $wpdb->get_var("SELECT login_page_url FROM $table_name");
     $project_id = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
 
-    $html .= "<script>logout('$project_id', '$login_page_url')</script>";
+    $login_page_url = $wpdb->get_var("SELECT login_page_url FROM $table_name");
+    $base_url = get_site_url();
+    $pageUrl = "$base_url/$login_page_url";
+    $html = '<div id="descope_logout_div"></div>';
+    $html .= "<script>logout('$project_id', '$pageUrl');</script>";
     return $html;
 }
 add_shortcode('descope-logout', 'descope_logout_shortcode');
@@ -221,7 +215,6 @@ function descope_session_shortcode($atts, $content = null)
         $currentPageUrl = substr($_SERVER['REQUEST_URI'], 1);
         login_redirect($currentPageUrl);
     }
-
 }
 add_shortcode('descope-session', 'descope_session_shortcode');
 
@@ -278,8 +271,6 @@ function login_redirect($currentPageUrl)
 
 function unset_cookie()
 {
-    session_destroy();
-
     // Unset cookie
     unset($_COOKIE['DS_SESSION']);
     setcookie('DS_SESSION', '', [
@@ -328,10 +319,12 @@ function descope_plugin_display_page()
             // Check if there is an existing row in the table
             $existing_row = $wpdb->get_row("SELECT * FROM $table_name LIMIT 1");
             
-            $url = 'https://api.descope.com/v2/keys/' . $new_project_id;
-            $client = new GuzzleHttp\Client();
-            $res = $client->request('GET', $url);
-            $jwk_set = serialize(json_decode($res->getBody(), true));
+            if (!empty($new_project_id)) {
+                $url = 'https://api.descope.com/v2/keys/' . $new_project_id;
+                $client = new GuzzleHttp\Client();
+                $res = $client->request('GET', $url);
+                $jwk_set = serialize(json_decode($res->getBody(), true));
+            }
             
             if ($existing_row !== null) {
                 // An existing row is found, update fields
