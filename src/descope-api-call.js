@@ -42,12 +42,14 @@ async function inject_flow(projectId, flowId, redirectUrl) {
     autoRefresh: true,
   });
 
-  const sessionToken = sdk.getSessionToken();
-  const notValidToken = sessionToken && sdk.isJwtExpired(sessionToken);
-  if (sessionToken && !notValidToken) {
-    const user = await sdk.me();
+  
+  const refreshToken = sdk.getRefreshToken();
+  const validRefreshToken = refreshToken && !sdk.isJwtExpired(refreshToken);
+  if (validRefreshToken) {
     sdk.refresh();
-    createToken(user.data, sessionToken, refreshToken, redirectUrl, projectId);
+    const sessionToken = sdk.getSessionToken();
+    const user = await sdk.me();
+    createToken(user.data, sessionToken, redirectUrl, projectId);
   } else {
     const e = document.getElementById("descope_flow_div");
     e.innerHTML = `<descope-wc project-id=${projectId} flow-id=${flowId} redirect_url=${redirectUrl}></descope-wc>`;
