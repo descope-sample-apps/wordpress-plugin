@@ -74,6 +74,4 @@
       'httponly' => true,
       'samesite' => 'Strict',
     ]);
-    
-    echo "COOKIE DATA: " . $cookie_data;
   }

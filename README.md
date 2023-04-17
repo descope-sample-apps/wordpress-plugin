@@ -64,7 +64,11 @@ However, if you're using a hosting service like [WPEngine](https://wpengine.com/
 
 ### Logout
 
-If you would like to add a link or button to log your user out and expire the logout cookie in the browser, you can use the `[descope-logout]` tag and add it to any shortcode block on the page.
+There are two ways you can implement logout, depending on how you want it to look in your website:
+
+1. If you would like to create an entirely new page for logout, all you have to do is create a new page in your WordPress admin page, create a new shortcode block in the page body, and then add the `[descope-logout]` tag. This page doesn't need to contain anything else, as the user will automatically be redirected to the login page after the authentication cookie is unset.
+
+2. If you would like to contain logout in clickable text or a button somewhere within a page, you will have to embed the HTML link `https://<your wordpress website base url>/wp-content/plugins/wordpress-plugin/src/descope-logout.php` into the text or button. This will also redirect you to the login page, after the unset the authentication cookie.
 
 ---
 

@@ -24,8 +24,6 @@ use Jose\Component\Signature\Serializer\JWSSerializerManager;
  * License: GPL2
  */
 
-// Define your plugin functionality here
-
 defined('ABSPATH') or die('You cannot access this plugin');
 
 // Activation hook
@@ -120,8 +118,8 @@ function descope_wc_shortcode($atts)
     $id = $atts['id'];
     $redirectUrl = $atts['redirect_url'];
 
-    // Extract projectId from table
-    $projectID = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
+    // Extract project_id from table
+    $project_id = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
 
     // If there is supposed to be a redirect upon success, set $redirectURL to that URL
     if (isset($_GET['redirectOnSuccess']) && !empty($_GET['redirectOnSuccess'])) {
@@ -130,18 +128,19 @@ function descope_wc_shortcode($atts)
 
     // Return html
     $html = '<div id="descope_flow_div"></div>';
-    $html .= "<script>inject_flow('$projectID', '$flowId', '$redirectUrl')</script>";
+    $html .= "<script>inject_flow('$project_id', '$flowId', '$redirectUrl')</script>";
 
     return $html;
 }
 add_shortcode('descope-wc', 'descope_wc_shortcode');
 
+
 function descope_logout_shortcode()
 {
     session_start();
     if (isset($_COOKIE['DS_SESSION'])) {
-        unset($_COOKIE['DS_SESSION']);
-        setcookie('DS_SESSION', '', time() - 3600, '/'); // empty value and old timestamp
+        // Destroys cookie
+        unset_cookie();
     }
 
     $_SESSION["AUTH_ID"] = null;
@@ -153,11 +152,13 @@ function descope_logout_shortcode()
     global $wpdb;
     $table_name = $wpdb->prefix . 'descope';
     $login_page_url = $wpdb->get_var("SELECT login_page_url FROM $table_name");
-    $base_url = get_site_url();
-    $pageUrl = $base_url . '/' . $login_page_url;
-    header("location:" . $pageUrl);
+    $project_id = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
+
+    $html .= "<script>logout('$project_id', '$login_page_url')</script>";
+    return $html;
 }
 add_shortcode('descope-logout', 'descope_logout_shortcode');
+
 
 function descope_wc_pre_post_update($post_ID, $data)
 {
@@ -214,8 +215,9 @@ add_action('pre_post_update', 'descope_wc_pre_post_update', 10, 2);
 function descope_session_shortcode($atts, $content = null)
 {
     session_start();
+
+    // Validate cookie before displaying protected page
     if (!validate_cookie()) {
-        echo "Could not validate cookie";
         $currentPageUrl = substr($_SERVER['REQUEST_URI'], 1);
         login_redirect($currentPageUrl);
     }
@@ -235,13 +237,9 @@ function validate_cookie()
         global $wpdb;
         $table_name = $wpdb->prefix . 'descope';
 
-        // $project_id = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
+        // Get JWK from DB
         $jwk_serialized = $wpdb->get_var("SELECT jwk_set FROM $table_name WHERE id = 1");
         $jwk_keys = unserialize($jwk_serialized);
-        // $url = 'https://api.descope.com/v2/keys/' . $project_id;
-        // $client = new GuzzleHttp\Client();
-        // $res = $client->request('GET', $url);
-        // $jwk_keys = json_decode($res->getBody(), true);
 
         // Perform Validation Logic for Signature
         $jwk_set = JWKSet::createFromKeyData($jwk_keys);
@@ -330,21 +328,10 @@ function descope_plugin_display_page()
             // Check if there is an existing row in the table
             $existing_row = $wpdb->get_row("SELECT * FROM $table_name LIMIT 1");
             
-            // try {
-            //     $url = 'https://api.descope.com/v2/keys/' . $new_project_id;
-            //     $client = new GuzzleHttp\Client();
-            //     $res = $client->request('GET', $url);
-            //     $jwk_set = serialize(json_decode($res->getBody(), true));
-            //     echo "JWK_SET: " . $jwk_set;
-            // } catch (ClientException $e) {
-                
-            // }
-
             $url = 'https://api.descope.com/v2/keys/' . $new_project_id;
             $client = new GuzzleHttp\Client();
             $res = $client->request('GET', $url);
             $jwk_set = serialize(json_decode($res->getBody(), true));
-            echo "JWK_SET: " . $jwk_set;
             
             if ($existing_row !== null) {
                 // An existing row is found, update fields
