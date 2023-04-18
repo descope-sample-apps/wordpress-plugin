@@ -2,7 +2,7 @@
 
 ## WordPress Plugin for [Descope](https://www.descope.com/) Authentication
 
-[![License](https://img.shields.io/packagist/l/auth0/auth0-php)](https://doge.mit-license.org/)
+[![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)(https://doge.mit-license.org/)
 
 ## Getting Started
 
@@ -64,7 +64,9 @@ However, if you're using a hosting service like [WPEngine](https://wpengine.com/
 
 ### Logout
 
-There are two ways you can implement logout, depending on how you want it to look in your website:
+You will notice a new logout page that is created when you activate the plugin in your WordPress website. This page will automatically clear all cookies and invalid your refresh tokens using the WebJS SDK.
+
+From that page, you can link any button or
 
 1. If you would like to create an entirely new page for logout, all you have to do is create a new page in your WordPress admin page, create a new shortcode block in the page body, and then add the `[descope-logout]` tag. This page doesn't need to contain anything else, as the user will automatically be redirected to the login page after the authentication cookie is unset.
 

@@ -60,9 +60,14 @@ function createLogoutPage()
     $page_content = '<!-- /wp:shortcode --> [descope-logout]  <!-- /wp:shortcode -->';
     $page_slug = 'descope-logout';
     $page_status = 'publish';
-    $page = get_page_by_title($page_title, OBJECT, 'page');
 
-    if (!$page) {
+    $pages = get_posts([
+        'title' => $page_title,
+        'post_type' => 'page',
+    ]);
+    // $page = get_page_by_title($page_title, OBJECT, 'page');
+
+    if (empty($pages)) {
         $page_args = array(
             'post_title' => $page_title,
             'post_content' => $page_content,
@@ -70,6 +75,7 @@ function createLogoutPage()
             'post_status' => $page_status,
             'post_type' => 'page'
         );
+
         wp_insert_post($page_args);
     }
     wp_delete_nav_menu('descope-logout');
@@ -147,8 +153,8 @@ function descope_logout_shortcode()
     $login_page_url = $wpdb->get_var("SELECT login_page_url FROM $table_name");
     $base_url = get_site_url();
     $pageUrl = "$base_url/$login_page_url";
-    $html = '<div id="descope_logout_div"></div>';
-    $html .= "<script>logout('$project_id', '$pageUrl');</script>";
+    
+    $html = "<script> logout('$project_id', '$pageUrl'); </script>";
     return $html;
 }
 add_shortcode('descope-logout', 'descope_logout_shortcode');
@@ -172,7 +178,7 @@ function descope_wc_pre_post_update($post_ID, $data)
         $redirectUrl = $shortcode_attributes['redirect_url'];
         $flow_id = $shortcode_attributes['flow_id'];
 
-        // Check if project ID  are set
+        // Check if project ID are set
         if (empty($project_id)) {
             $error_message = 'Please enter project id and redirect URL under "Descope Config" from navigation panel.';
             add_action('admin_notices', function () use ($error_message) {
@@ -208,8 +214,6 @@ add_action('pre_post_update', 'descope_wc_pre_post_update', 10, 2);
 
 function descope_session_shortcode($atts, $content = null)
 {
-    session_start();
-
     // Validate cookie before displaying protected page
     if (!validate_cookie()) {
         $currentPageUrl = substr($_SERVER['REQUEST_URI'], 1);
@@ -429,7 +433,6 @@ function descope_plugin_display_page()
                 <div class="td-padding">
                     <input class="projectid-but" type="submit" id="submit-btn" name="submit" value="Submit" disabled>
                 </div>
-
             </div>
         </form>
     </div>

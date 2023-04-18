@@ -1,5 +1,4 @@
 <?php
-  session_start();
   require __DIR__ . '/../vendor/autoload.php';
   use GuzzleHttp\Client;
   use GuzzleHttp\Exception\RequestException;
@@ -42,8 +41,6 @@
   
   // If Signature is not valid, destroy session and invalidate cookie.
   if (!$isVerified) {
-    session_destroy();
-
     // Unset cookie
     unset($_COOKIE['DS_SESSION']);
     setcookie('DS_SESSION', '', [
