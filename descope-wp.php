@@ -129,9 +129,12 @@ function descope_wc_shortcode($atts)
         $redirectUrl = htmlspecialchars($_GET['redirectOnSuccess']);
     }
 
+    $plugin_data = get_plugin_data( __FILE__ );
+    $slugName = $plugin_data['TextDomain'];
+
     // Return html
     $html = '<div id="descope_flow_div"></div>';
-    $html .= "<script>inject_flow('$project_id', '$flowId', '$redirectUrl')</script>";
+    $html .= "<script>inject_flow('$project_id', '$flowId', '$redirectUrl', '$slugName')</script>";
 
     return $html;
 }
