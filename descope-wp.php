@@ -24,8 +24,6 @@ use Jose\Component\Signature\Serializer\JWSSerializerManager;
  * License: GPL2
  */
 
-// Define your plugin functionality here
-
 defined('ABSPATH') or die('You cannot access this plugin');
 
 // Activation hook
@@ -34,7 +32,6 @@ register_activation_hook(__FILE__, 'my_plugin_activate');
 
 function my_plugin_activate()
 {
-    session_start();
     global $wpdb;
 
     // Create table when the plugin activates
@@ -63,9 +60,13 @@ function createLogoutPage()
     $page_content = '<!-- /wp:shortcode --> [descope-logout]  <!-- /wp:shortcode -->';
     $page_slug = 'descope-logout';
     $page_status = 'publish';
-    $page = get_page_by_title($page_title, OBJECT, 'page');
 
-    if (!$page) {
+    $pages = get_posts([
+        'title' => $page_title,
+        'post_type' => 'page',
+    ]);
+
+    if (empty($pages)) {
         $page_args = array(
             'post_title' => $page_title,
             'post_content' => $page_content,
@@ -73,6 +74,7 @@ function createLogoutPage()
             'post_status' => $page_status,
             'post_type' => 'page'
         );
+
         wp_insert_post($page_args);
     }
     wp_delete_nav_menu('descope-logout');
@@ -84,7 +86,6 @@ register_deactivation_hook(__FILE__, 'my_plugin_deactivate');
 
 function my_plugin_deactivate()
 {
-    session_destroy();
     unset_cookie();
 
     global $wpdb;
@@ -120,8 +121,8 @@ function descope_wc_shortcode($atts)
     $id = $atts['id'];
     $redirectUrl = $atts['redirect_url'];
 
-    // Extract projectId from table
-    $projectID = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
+    // Extract project_id from table
+    $project_id = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
 
     // If there is supposed to be a redirect upon success, set $redirectURL to that URL
     if (isset($_GET['redirectOnSuccess']) && !empty($_GET['redirectOnSuccess'])) {
@@ -130,34 +131,33 @@ function descope_wc_shortcode($atts)
 
     // Return html
     $html = '<div id="descope_flow_div"></div>';
-    $html .= "<script>inject_flow('$projectID', '$flowId', '$redirectUrl')</script>";
+    $html .= "<script>inject_flow('$project_id', '$flowId', '$redirectUrl')</script>";
 
     return $html;
 }
 add_shortcode('descope-wc', 'descope_wc_shortcode');
 
+
 function descope_logout_shortcode()
 {
-    session_start();
     if (isset($_COOKIE['DS_SESSION'])) {
-        unset($_COOKIE['DS_SESSION']);
-        setcookie('DS_SESSION', '', time() - 3600, '/'); // empty value and old timestamp
+        // Destroys cookie
+        unset_cookie();
     }
-
-    $_SESSION["AUTH_ID"] = null;
-    $_SESSION["AUTH_NAME"] = null;
-    $_SESSION["SESSION_TOKEN"] = null;
-
-    session_destroy();
 
     global $wpdb;
     $table_name = $wpdb->prefix . 'descope';
+    $project_id = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
+
     $login_page_url = $wpdb->get_var("SELECT login_page_url FROM $table_name");
     $base_url = get_site_url();
-    $pageUrl = $base_url . '/' . $login_page_url;
-    header("location:" . $pageUrl);
+    $pageUrl = "$base_url/$login_page_url";
+    
+    $html = "<script> logout('$project_id', '$pageUrl'); </script>";
+    return $html;
 }
 add_shortcode('descope-logout', 'descope_logout_shortcode');
+
 
 function descope_wc_pre_post_update($post_ID, $data)
 {
@@ -177,7 +177,7 @@ function descope_wc_pre_post_update($post_ID, $data)
         $redirectUrl = $shortcode_attributes['redirect_url'];
         $flow_id = $shortcode_attributes['flow_id'];
 
-        // Check if project ID  are set
+        // Check if project ID are set
         if (empty($project_id)) {
             $error_message = 'Please enter project id and redirect URL under "Descope Config" from navigation panel.';
             add_action('admin_notices', function () use ($error_message) {
@@ -213,13 +213,11 @@ add_action('pre_post_update', 'descope_wc_pre_post_update', 10, 2);
 
 function descope_session_shortcode($atts, $content = null)
 {
-    session_start();
+    // Validate cookie before displaying protected page
     if (!validate_cookie()) {
-        echo "Could not validate cookie";
         $currentPageUrl = substr($_SERVER['REQUEST_URI'], 1);
         login_redirect($currentPageUrl);
     }
-
 }
 add_shortcode('descope-session', 'descope_session_shortcode');
 
@@ -235,13 +233,9 @@ function validate_cookie()
         global $wpdb;
         $table_name = $wpdb->prefix . 'descope';
 
-        // $project_id = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
+        // Get JWK from DB
         $jwk_serialized = $wpdb->get_var("SELECT jwk_set FROM $table_name WHERE id = 1");
         $jwk_keys = unserialize($jwk_serialized);
-        // $url = 'https://api.descope.com/v2/keys/' . $project_id;
-        // $client = new GuzzleHttp\Client();
-        // $res = $client->request('GET', $url);
-        // $jwk_keys = json_decode($res->getBody(), true);
 
         // Perform Validation Logic for Signature
         $jwk_set = JWKSet::createFromKeyData($jwk_keys);
@@ -280,8 +274,6 @@ function login_redirect($currentPageUrl)
 
 function unset_cookie()
 {
-    session_destroy();
-
     // Unset cookie
     unset($_COOKIE['DS_SESSION']);
     setcookie('DS_SESSION', '', [
@@ -330,21 +322,12 @@ function descope_plugin_display_page()
             // Check if there is an existing row in the table
             $existing_row = $wpdb->get_row("SELECT * FROM $table_name LIMIT 1");
             
-            // try {
-            //     $url = 'https://api.descope.com/v2/keys/' . $new_project_id;
-            //     $client = new GuzzleHttp\Client();
-            //     $res = $client->request('GET', $url);
-            //     $jwk_set = serialize(json_decode($res->getBody(), true));
-            //     echo "JWK_SET: " . $jwk_set;
-            // } catch (ClientException $e) {
-                
-            // }
-
-            $url = 'https://api.descope.com/v2/keys/' . $new_project_id;
-            $client = new GuzzleHttp\Client();
-            $res = $client->request('GET', $url);
-            $jwk_set = serialize(json_decode($res->getBody(), true));
-            echo "JWK_SET: " . $jwk_set;
+            if (!empty($new_project_id)) {
+                $url = 'https://api.descope.com/v2/keys/' . $new_project_id;
+                $client = new GuzzleHttp\Client();
+                $res = $client->request('GET', $url);
+                $jwk_set = serialize(json_decode($res->getBody(), true));
+            }
             
             if ($existing_row !== null) {
                 // An existing row is found, update fields
@@ -449,7 +432,6 @@ function descope_plugin_display_page()
                 <div class="td-padding">
                     <input class="projectid-but" type="submit" id="submit-btn" name="submit" value="Submit" disabled>
                 </div>
-
             </div>
         </form>
     </div>

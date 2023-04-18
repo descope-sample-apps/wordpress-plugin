@@ -11,7 +11,6 @@ function createToken(userDetails, sessionToken, redirectURL, projectId) {
 
   xmlHttp.onreadystatechange = function () {
     if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
-      // console.log("Response", xmlHttp.responseText);
       window.location = `${baseUrl}/${redirectURL}`;
     }
   };
@@ -42,7 +41,6 @@ async function inject_flow(projectId, flowId, redirectUrl) {
     autoRefresh: true,
   });
 
-  
   const refreshToken = sdk.getRefreshToken();
   const validRefreshToken = refreshToken && !sdk.isJwtExpired(refreshToken);
   if (validRefreshToken) {
@@ -59,4 +57,17 @@ async function inject_flow(projectId, flowId, redirectUrl) {
       wcElement.addEventListener("error", onError);
     }
   }
+}
+
+async function logout(projectId, loginPageUrl) {
+  const sdk = Descope({
+    projectId: projectId,
+    persistTokens: true,
+    autoRefresh: true,
+  });
+
+  const resp = await sdk.logout();
+
+  // Redirect back to login page
+  window.location = loginPageUrl;
 }
