@@ -65,7 +65,6 @@ function createLogoutPage()
         'title' => $page_title,
         'post_type' => 'page',
     ]);
-    // $page = get_page_by_title($page_title, OBJECT, 'page');
 
     if (empty($pages)) {
         $page_args = array(
