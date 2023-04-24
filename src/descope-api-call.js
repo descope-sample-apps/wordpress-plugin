@@ -1,4 +1,10 @@
-function createToken(userDetails, sessionToken, redirectURL, projectId) {
+function createToken(
+  userDetails,
+  sessionToken,
+  redirectURL,
+  projectId,
+  slugName
+) {
   var formData = new FormData();
   formData.append("userId", userDetails.userId);
   formData.append("userName", userDetails.name);
@@ -16,7 +22,7 @@ function createToken(userDetails, sessionToken, redirectURL, projectId) {
   };
   xmlHttp.open(
     "post",
-    `${baseUrl}/wp-content/plugins/wordpress-plugin/src/descope-token.php`
+    `${baseUrl}/wp-content/plugins/${slugName}/src/descope-token.php`
   );
   xmlHttp.send(formData);
 }
@@ -28,13 +34,14 @@ const onSuccess = (e) => {
     e?.detail?.user,
     sessionToken,
     e.target.getAttribute("redirect_url"),
-    e.target.getAttribute("project-id")
+    e.target.getAttribute("project-id"),
+    e.target.getAttribute("slugName")
   );
 };
 
 const onError = (err) => console.log(err);
 
-async function inject_flow(projectId, flowId, redirectUrl) {
+async function inject_flow(projectId, flowId, redirectUrl, slugName) {
   const sdk = Descope({
     projectId: projectId,
     persistTokens: true,
@@ -47,7 +54,7 @@ async function inject_flow(projectId, flowId, redirectUrl) {
     sdk.refresh();
     const sessionToken = sdk.getSessionToken();
     const user = await sdk.me();
-    createToken(user.data, sessionToken, redirectUrl, projectId);
+    createToken(user.data, sessionToken, redirectUrl, projectId, slugName);
   } else {
     const e = document.getElementById("descope_flow_div");
     e.innerHTML = `<descope-wc project-id=${projectId} flow-id=${flowId} redirect_url=${redirectUrl}></descope-wc>`;
