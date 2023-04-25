@@ -39,7 +39,7 @@ Now that you've set everything up in the background, let's integrate the plugin 
 
 ### Add Descope Flows to your WP Pages
 
-> **NOTE**: Before adding shortcodes, make sure that you're using `Post Names` (or slugs) for your website's permalink structure. You can find instructions on how to change your permalink structures [here](https://yoast.com/help/how-do-i-change-the-permalink-structure/). If this is not configured, you might see this error message when adding shortcode: ![image](https://www.zeninvader.com/static/805659149ef98f3ef91aadb66457a92f/86bd0/wordpress-publishing-failed-valid-json.jpg)
+> **_NOTE:_**: Before adding shortcodes, make sure that you're using `Post Names` (or slugs) for your website's permalink structure. You can find instructions on how to change your permalink structures [here](https://yoast.com/help/how-do-i-change-the-permalink-structure/). If this is not configured, you might see this error message when adding shortcode: ![image](https://www.zeninvader.com/static/805659149ef98f3ef91aadb66457a92f/86bd0/wordpress-publishing-failed-valid-json.jpg)
 
 First, you're going to want to add the Descope flows tag to one of your pages (this will be where the user signs in). To add the Descope flow page to your website, just add a shortcode block to the main text area of any page, and add the shortcode `[descope-wc id="login" redirect_url="about" flow_id="sign-up-or-in" /]`.
 
@@ -49,7 +49,7 @@ First, you're going to want to add the Descope flows tag to one of your pages (t
 
 ### Protecting Pages
 
-The final step to adding Descope to any of your website pages, is to add the session tag to the top of each page. The Descope WordPress plugin supports RBAC authorization for each of the pages, as well specific elements within a page.
+The final step to adding Descope to any of your website pages, is to add the session tag to the top of each page. The Descope WordPress plugin supports RBAC authorization for each of the pages.
 
 Simply add the shortcode `[descope-session]` to a shortcode block in any of the pages you wish to require authentication for, and Descope will require authentication for any user that visits the page.
 
@@ -57,7 +57,7 @@ If you wish to protect the page with a specific role, you can just add that role
 
 `[descope-session role="admin"]`
 
-> **NOTE**: You will need to make sure that your WordPress hosting service is not page caching and preventing the plugin from being able to read the `DS_SESSION` cookie from the browser's localStorage. If you're using a hosting service like [WPEngine](https://wpengine.com/), you will need to contact their support team to disable page caching when detecting a cookie with the name `DS_SESSION` so that it can be read by the PHP code. After that, this plugin should work seamlessly.
+> **_NOTE:_**: You will need to make sure that your WordPress hosting service is not page caching and preventing the plugin from being able to read the `DS_SESSION` cookie from the browser's localStorage. If you're using a hosting service like [WPEngine](https://wpengine.com/), you will need to contact their support team to disable page caching when detecting a cookie with the name `DS_SESSION` so that it can be read by the PHP code. After that, this plugin should work seamlessly.
 
 The cookie itself is:
 
