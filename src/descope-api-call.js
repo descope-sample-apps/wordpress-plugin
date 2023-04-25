@@ -35,7 +35,7 @@ const onSuccess = (e) => {
     sessionToken,
     e.target.getAttribute("redirect_url"),
     e.target.getAttribute("project-id"),
-    e.target.getAttribute("slugName")
+    e.target.getAttribute("slug_name")
   );
 };
 
