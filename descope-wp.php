@@ -28,8 +28,6 @@ defined('ABSPATH') or die('You cannot access this plugin');
 
 // Activation hook
 register_activation_hook(__FILE__, 'my_plugin_activate');
-
-
 function my_plugin_activate()
 {
     global $wpdb;
@@ -47,10 +45,18 @@ function my_plugin_activate()
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY  (id)
-) $charset_collate;";
+    ) $charset_collate;";
+
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
     dbDelta($sql);
     createLogoutPage();
+    launch_setup_wizard();
+}
+
+function launch_setup_wizard() {
+    $base_url = get_site_url();
+    $pageUrl = "$base_url/wp-admin/admin.php?page=descope-plugin";
+    header("location:" . $pageUrl);
 }
 
 function createLogoutPage()
@@ -117,24 +123,24 @@ function descope_wc_shortcode($atts)
     $table_name = $wpdb->prefix . 'descope';
 
     // Extract the redirect url, flow ID, and html tag id from the shortcode attributes
-    $flowId = $atts['flow_id'];
+    $flow_id = $atts['flow_id'];
     $id = $atts['id'];
-    $redirectUrl = $atts['redirect_url'];
+    $redirect_url = $atts['redirect_url'];
 
     // Extract project_id from table
     $project_id = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
 
-    // If there is supposed to be a redirect upon success, set $redirectURL to that URL
+    // If there is supposed to be a redirect upon success, set $redirect_url to that URL
     if (isset($_GET['redirectOnSuccess']) && !empty($_GET['redirectOnSuccess'])) {
-        $redirectUrl = htmlspecialchars($_GET['redirectOnSuccess']);
+        $redirect_url = htmlspecialchars($_GET['redirectOnSuccess']);
     }
 
     $plugin_data = get_plugin_data( __FILE__ );
-    $slugName = $plugin_data['TextDomain'];
+    $slug_name = $plugin_data['TextDomain'];
 
     // Return html
     $html = '<div id="descope_flow_div"></div>';
-    $html .= "<script>inject_flow('$project_id', '$flowId', '$redirectUrl', '$slugName')</script>";
+    $html .= "<script>inject_flow('$project_id', '$flow_id', '$redirect_url', '$slug_name')</script>";
 
     return $html;
 }
@@ -177,7 +183,7 @@ function descope_wc_pre_post_update($post_ID, $data)
         // Storing the value
         $project_id = $wpdb->get_var("SELECT project_id FROM $table_name WHERE id = 1");
         $id = $shortcode_attributes['id'];
-        $redirectUrl = $shortcode_attributes['redirect_url'];
+        $redirect_url = $shortcode_attributes['redirect_url'];
         $flow_id = $shortcode_attributes['flow_id'];
 
         // Check if project ID are set
@@ -190,7 +196,7 @@ function descope_wc_pre_post_update($post_ID, $data)
         }
 
         // Check if id, flow ID, and redirect URL are set
-        if (empty($id) || empty($flow_id) || empty($redirectUrl)) {
+        if (empty($id) || empty($flow_id) || empty($redirect_url)) {
             $missing_attributes = array();
 
             if (empty($id)) {
@@ -199,7 +205,7 @@ function descope_wc_pre_post_update($post_ID, $data)
             if (empty($flow_id)) {
                 $missing_attributes[] = 'flow_id';
             }
-            if (empty($redirectUrl)) {
+            if (empty($redirect_url)) {
                 $missing_attributes[] = 'redirect_url';
             }
 
@@ -215,11 +221,20 @@ add_action('pre_post_update', 'descope_wc_pre_post_update', 10, 2);
 
 
 function descope_session_shortcode($atts, $content = null)
-{
-    // Validate cookie before displaying protected page
+{   
+    // Validate cookie signature to make sure the session token is valid
     if (!validate_cookie()) {
         $currentPageUrl = substr($_SERVER['REQUEST_URI'], 1);
         login_redirect($currentPageUrl);
+    }
+
+    $check_role = isset($atts["role"]) ? true : false;
+    if ($check_role) {
+        // Validate cookie and if JWT contains user with proper role
+        if (!validate_role($atts['role'])) {
+            $currentPageUrl = substr($_SERVER['REQUEST_URI'], 1);
+            login_redirect($currentPageUrl);
+        } 
     }
 }
 add_shortcode('descope-session', 'descope_session_shortcode');
@@ -260,6 +275,39 @@ function validate_cookie()
             return false;
         }
     }
+}
+
+
+function validate_role($role_to_confirm)
+{
+    $serializerManager = new JWSSerializerManager([
+        new CompactSerializer(),
+    ]);
+
+    $session_token = json_decode(stripslashes($_COOKIE["DS_SESSION"]), true)["token"];
+    $jws = $serializerManager->unserialize($session_token);
+    $payload = json_decode($jws->getPayload(),true);
+
+    // Check to see if they are tenants, and if so, check the roles underneath the tenants
+    if (isset($payload["tenants"])) {
+        foreach ($payload["tenants"] as $value) {
+            foreach ($value["roles"] as $role) {
+                if ($role_to_confirm == $role) {
+                    return true;
+                }
+            }
+        }
+    } 
+    
+    // There may be tenants with no roles, or no tenants and just roles defined
+    if (isset($payload["roles"])) {
+        foreach ($payload["roles"] as $role) {
+            if ($role_to_confirm == $role) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 
@@ -442,9 +490,9 @@ function descope_plugin_display_page()
         // Function to enable the button only when input length of both the input boxes is greater than 0
         function validateInput() {
             var descopeInput = document.getElementById('descope_input');
-            var sessionRedirectUrlInput = document.getElementById('login_page_url');
+            var sessionredirect_urlInput = document.getElementById('login_page_url');
             var submitBtn = document.getElementById('submit-btn');
-            if (descopeInput.value.length > 0 && sessionRedirectUrlInput.value.length > 0) {
+            if (descopeInput.value.length > 0 && sessionredirect_urlInput.value.length > 0) {
                 submitBtn.disabled = false;
             } else { submitBtn.disabled = true; }
         }
