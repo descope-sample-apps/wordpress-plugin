@@ -339,6 +339,9 @@ function unset_cookie()
 
 function descope_plugin_add_menu_item()
 {
+    $plugin_data = get_plugin_data( __FILE__ );
+    $slug_name = $plugin_data['TextDomain'];
+
     add_menu_page(
         'Descope-plugin',
         // Page title
@@ -348,7 +351,9 @@ function descope_plugin_add_menu_item()
         // Capability required to access this page
         'descope-plugin',
         // Menu slug
-        'descope_plugin_display_page' // Function to display the contents of this page
+        'descope_plugin_display_page',
+        // Function to display the contents of this page
+        plugins_url($slug_name . '/assets/descope-config-icon.ico')
     );
 }
 add_action('admin_menu', 'descope_plugin_add_menu_item');
@@ -360,6 +365,7 @@ function descope_plugin_display_page()
     ?>
     <div class="wrap">
         <h1>Descope Configuration</h1>
+        <p>Please fill in both fields, as they are mandatory for this plugin to work.</p>
         <?php
         // Query after the input values are submitted
         if (isset($_POST['submit'])) {
