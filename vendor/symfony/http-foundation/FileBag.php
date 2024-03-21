@@ -31,13 +31,13 @@ class FileBag extends ParameterBag
         $this->replace($parameters);
     }
 
-    public function replace(array $files = [])
+    public function replace(array $files = []): void
     {
         $this->parameters = [];
         $this->add($files);
     }
 
-    public function set(string $key, mixed $value)
+    public function set(string $key, mixed $value): void
     {
         if (!\is_array($value) && !$value instanceof UploadedFile) {
             throw new \InvalidArgumentException('An uploaded file must be an array or an instance of UploadedFile.');
@@ -46,7 +46,7 @@ class FileBag extends ParameterBag
         parent::set($key, $this->convertFileInformation($value));
     }
 
-    public function add(array $files = [])
+    public function add(array $files = []): void
     {
         foreach ($files as $key => $file) {
             $this->set($key, $file);
@@ -75,7 +75,7 @@ class FileBag extends ParameterBag
                 $file = new UploadedFile($file['tmp_name'], $file['name'], $file['type'], $file['error'], false);
             }
         } else {
-            $file = array_map(function ($v) { return $v instanceof UploadedFile || \is_array($v) ? $this->convertFileInformation($v) : $v; }, $file);
+            $file = array_map(fn ($v) => $v instanceof UploadedFile || \is_array($v) ? $this->convertFileInformation($v) : $v, $file);
             if (array_keys($keys) === $keys) {
                 $file = array_filter($file);
             }

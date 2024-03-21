@@ -31,13 +31,13 @@ class ContextualizedDumper implements DataDumperInterface
         $this->contextProviders = $contextProviders;
     }
 
-    public function dump(Data $data)
+    public function dump(Data $data): ?string
     {
-        $context = [];
+        $context = $data->getContext();
         foreach ($this->contextProviders as $contextProvider) {
             $context[$contextProvider::class] = $contextProvider->getContext();
         }
 
-        $this->wrappedDumper->dump($data->withContext($context));
+        return $this->wrappedDumper->dump($data->withContext($context));
     }
 }

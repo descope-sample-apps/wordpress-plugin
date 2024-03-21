@@ -18,8 +18,9 @@ namespace Symfony\Component\Config\Definition\Builder;
  */
 class ValidationBuilder
 {
-    protected $node;
-    public $rules = [];
+    public array $rules = [];
+
+    protected NodeDefinition $node;
 
     public function __construct(NodeDefinition $node)
     {
@@ -31,7 +32,7 @@ class ValidationBuilder
      *
      * @return ExprBuilder|$this
      */
-    public function rule(\Closure $closure = null)
+    public function rule(?\Closure $closure = null): ExprBuilder|static
     {
         if (null !== $closure) {
             $this->rules[] = $closure;

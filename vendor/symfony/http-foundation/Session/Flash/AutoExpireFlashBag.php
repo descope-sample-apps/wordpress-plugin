@@ -35,12 +35,12 @@ class AutoExpireFlashBag implements FlashBagInterface
         return $this->name;
     }
 
-    public function setName(string $name)
+    public function setName(string $name): void
     {
         $this->name = $name;
     }
 
-    public function initialize(array &$flashes)
+    public function initialize(array &$flashes): void
     {
         $this->flashes = &$flashes;
 
@@ -51,7 +51,7 @@ class AutoExpireFlashBag implements FlashBagInterface
         $this->flashes['new'] = [];
     }
 
-    public function add(string $type, mixed $message)
+    public function add(string $type, mixed $message): void
     {
         $this->flashes['new'][$type][] = $message;
     }
@@ -90,12 +90,12 @@ class AutoExpireFlashBag implements FlashBagInterface
         return $return;
     }
 
-    public function setAll(array $messages)
+    public function setAll(array $messages): void
     {
         $this->flashes['new'] = $messages;
     }
 
-    public function set(string $type, string|array $messages)
+    public function set(string $type, string|array $messages): void
     {
         $this->flashes['new'][$type] = (array) $messages;
     }
