@@ -23,7 +23,7 @@ class MemcachedCaster
     private static array $optionConstants;
     private static array $defaultOptions;
 
-    public static function castMemcached(\Memcached $c, array $a, Stub $stub, bool $isNested)
+    public static function castMemcached(\Memcached $c, array $a, Stub $stub, bool $isNested): array
     {
         $a += [
             Caster::PREFIX_VIRTUAL.'servers' => $c->getServerList(),

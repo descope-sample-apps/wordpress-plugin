@@ -1,6 +1,31 @@
 CHANGELOG
 =========
 
+7.1
+---
+
+ * Add support for new DOM extension classes in `DOMCaster`
+
+7.0
+---
+
+ * Add argument `$label` to `VarDumper::dump()`
+ * Require explicit argument when calling `VarDumper::setHandler()`
+ * Remove display of backtrace in `Twig_Template`, only `Twig\Template` is supported
+
+6.4
+---
+
+ * Dump uninitialized properties
+
+6.3
+---
+
+ * Add caster for `WeakMap`
+ * Add support of named arguments to `dd()` and `dump()` to display the argument name
+ * Add support for `Relay\Relay`
+ * Add display of invisible characters
+
 6.2
 ---
 

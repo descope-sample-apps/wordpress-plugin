@@ -26,14 +26,15 @@ namespace Symfony\Component\HttpFoundation;
  */
 class StreamedResponse extends Response
 {
-    protected $callback;
-    protected $streamed;
-    private bool $headersSent;
+    protected ?\Closure $callback = null;
+    protected bool $streamed = false;
+
+    private bool $headersSent = false;
 
     /**
      * @param int $status The HTTP status code (200 "OK" by default)
      */
-    public function __construct(callable $callback = null, int $status = 200, array $headers = [])
+    public function __construct(?callable $callback = null, int $status = 200, array $headers = [])
     {
         parent::__construct(null, $status, $headers);
 
@@ -51,25 +52,38 @@ class StreamedResponse extends Response
      */
     public function setCallback(callable $callback): static
     {
-        $this->callback = $callback;
+        $this->callback = $callback(...);
 
         return $this;
+    }
+
+    public function getCallback(): ?\Closure
+    {
+        if (!isset($this->callback)) {
+            return null;
+        }
+
+        return ($this->callback)(...);
     }
 
     /**
      * This method only sends the headers once.
      *
+     * @param positive-int|null $statusCode The status code to use, override the statusCode property if set and not null
+     *
      * @return $this
      */
-    public function sendHeaders(): static
+    public function sendHeaders(?int $statusCode = null): static
     {
         if ($this->headersSent) {
             return $this;
         }
 
-        $this->headersSent = true;
+        if ($statusCode < 100 || $statusCode >= 200) {
+            $this->headersSent = true;
+        }
 
-        return parent::sendHeaders();
+        return parent::sendHeaders($statusCode);
     }
 
     /**
@@ -85,8 +99,8 @@ class StreamedResponse extends Response
 
         $this->streamed = true;
 
-        if (null === $this->callback) {
-            throw new \LogicException('The Response callback must not be null.');
+        if (!isset($this->callback)) {
+            throw new \LogicException('The Response callback must be set.');
         }
 
         ($this->callback)();

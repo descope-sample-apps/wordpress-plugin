@@ -1,6 +1,6 @@
 {
   "require": {
-    "web-token/jwt-framework": "2.2.11",
+    "web-token/jwt-framework": "4.0.1",
     "guzzlehttp/guzzle": "^7.0",
     "paragonie/constant_time_encoding": "^2.6"
   }
