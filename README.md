@@ -2,6 +2,8 @@
 
 ## WordPress Plugin for [Descope](https://www.descope.com/) Authentication
 
+> **Note**: This repo is archived, and has been replaced with our new [WordPress Plugin](https://github.com/descope/descope-wordpress).
+
 [![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 
 ## Getting Started
